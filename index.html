@@ -109,12 +109,12 @@
         
         /* Bloque de cita visible */
         .appointment-block { 
-            position: absolute; top: 0; left: 1px; right: 1px; border-radius: 4px; padding: 4px; font-size: 0.8rem; /* Aumentado de 0.75rem */
+            position: absolute; top: 0; left: 1px; right: 1px; border-radius: 4px; padding: 4px; font-size: 0.8rem; 
             overflow: hidden; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
             display: flex; flex-direction: column; justify-content: center;
-            /* Añadido Font-weight bold */
-            font-weight: bold; 
-            /* SIN pointer-events, dejar que el flujo de eventos siga al padre 'slot' */
+            /* IMPORTANTE: Permitir interacción */
+            pointer-events: auto;
+            font-weight: bold; /* Fuente negrita */
         }
 
         .appointment-block.status-pending { background-color: #FFEB3B; color: #212121; border: 1px solid #FBC02D; }
@@ -237,7 +237,9 @@
             <h2>Gestión de Compras</h2>
             <button class="btn-add" onclick="app.openPurchaseModal()">+ Nueva Compra</button>
             <div style="margin-top: 20px;">
-                <ul class="list-group" id="purchase-list"></ul>
+                <ul class="list-group" id="purchase-list">
+                    <!-- Lista de compras -->
+                </ul>
             </div>
         </section>
 
@@ -513,7 +515,7 @@
                 return this.data.closedDays.includes(dateStr);
             },
 
-            /* --- CITAS LÓGICA --- */
+            /* --- CITAS LÓGICA (SOLUCIÓN DEFINITIVA) --- */
             getFormattedDate: function(d) { return d.toISOString().split('T')[0]; },
             getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
             changeDay: function(delta) { this.data.currentDate.setDate(this.data.currentDate.getDate() + delta); this.renderDate(); this.renderGrid(); },
@@ -522,23 +524,6 @@
             timeToMins: function(timeStr) {
                 const [h, m] = timeStr.split(':').map(Number);
                 return h * 60 + m;
-            },
-
-            // Manejador centralizado de clics
-            handleSlotClick: function(e, time, col, appId) {
-                e.stopPropagation();
-                
-                const currentStr = this.getFormattedDate(this.data.currentDate);
-                if(this.isDayClosed(currentStr)) {
-                    this.showToast("El día está cerrado. No se pueden modificar citas.");
-                    return;
-                }
-
-                if (appId) {
-                    this.openManageAppointment(appId);
-                } else {
-                    this.openCreateModal(time, col);
-                }
             },
 
             renderGrid: function() {
@@ -563,7 +548,7 @@
                     closeBtn.classList.remove('btn-secondary');
                 }
 
-                // CAMBIO: h <= 19 para que la última hora sea las 19:45
+                // Loop hasta las 19
                 for (let h = 9; h <= 19; h++) {
                     for (let m = 0; m < 60; m += 15) {
                         const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
@@ -591,11 +576,10 @@
                                 return (currentMins > startM && currentMins < endM);
                             });
 
-                            let appIdToHandle = null;
-
+                            // --- LÓGICA DE ASIGNACIÓN DE CLICS ---
+                            
                             if (startApp) {
                                 // --- CASO 1: INICIO DE CITA ---
-                                appIdToHandle = startApp.id;
                                 slot.classList.add('occupied');
                                 if(startApp.status === 'closed') slot.classList.add('status-closed');
                                 
@@ -607,19 +591,42 @@
                                 block.style.height = (startApp.duration * pxPerMin) + 'px';
                                 block.innerHTML = `<div class="app-client">${startApp.client}</div><div class="app-service">${startApp.service}</div>`;
                                 
-                                // NO ASIGNAMOS onclick al bloque. Se lo dejamos al padre.
+                                // ASIGNACIÓN DIRECTA AL BLOQUE
+                                block.onclick = (e) => { 
+                                    e.stopPropagation(); // Evitar que suba al slot
+                                    this.openManageAppointment(startApp.id); 
+                                };
+                                
                                 slot.appendChild(block);
+                                // IMPORTANTE: No asignamos onclick al slot aquí, para que el bloque capture el evento.
 
                             } else if (activeApp) {
-                                // --- CASO 2: DURACIÓN DE CITA ---
+                                // --- CASO 2: DURACIÓN DE CITA (ZONA FANTASMA) ---
                                 appIdToHandle = activeApp.id;
                                 slot.classList.add('occupied');
                                 if(activeApp.status === 'closed') slot.classList.add('status-closed');
-                            }
+                                
+                                // ASIGNACIÓN DIRECTA AL SLOT (PARA PODER CLICAR DONDE NO HAY BLOQUE)
+                                slot.onclick = (e) => {
+                                    e.stopPropagation();
+                                    if(this.isDayClosed(currentStr)) {
+                                        this.showToast("El día está cerrado.");
+                                        return;
+                                    }
+                                    this.openManageAppointment(activeApp.id);
+                                };
 
-                            // --- CONTROLADOR DE CLIC ÚNICO ---
-                            // Detecta si tocaste el bloque o el fondo
-                            slot.onclick = (e) => this.handleSlotClick(e, time, col, appIdToHandle);
+                            } else {
+                                // --- CASO 3: HUECO LIBRE ---
+                                slot.onclick = (e) => {
+                                    e.stopPropagation();
+                                    if(this.isDayClosed(currentStr)) {
+                                        this.showToast("El día está cerrado.");
+                                        return;
+                                    }
+                                    this.openCreateModal(timeStr, col);
+                                };
+                            }
 
                             grid.appendChild(slot);
                         }
@@ -700,40 +707,6 @@
                     appData.status = 'closed';
                     this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Reserva cerrada");
                 }
-            },
-
-            /* --- STOCK --- */
-            addStockItem: function() {
-                const txt = document.getElementById('stock-item').value.trim();
-                if(!txt) return;
-                this.data.stock.push({ id: Date.now(), text: txt, checked: false });
-                document.getElementById('stock-item').value = '';
-                this.saveData(); this.renderStock();
-            },
-            toggleStock: function(id) {
-                const i = this.data.stock.find(x => x.id === id);
-                if(i) { i.checked = !i.checked; this.saveData(); this.renderStock(); }
-            },
-            deleteStock: function(id) {
-                this.data.stock = this.data.stock.filter(i => i.id !== id);
-                this.saveData(); this.renderStock();
-            },
-            renderStock: function() {
-                const c = document.getElementById('stock-list'); c.innerHTML = '';
-                this.data.stock.forEach(i => {
-                    const d = document.createElement('div');
-                    d.className = `stock-item ${i.checked ? 'checked' : ''}`;
-                    d.innerHTML = `
-                        <div class="stock-item-left">
-                            <input type="checkbox" ${i.checked?'checked':''} onchange="app.toggleStock(${i.id})">
-                            <span class="stock-text">${i.text}</span>
-                        </div>
-                        <div class="list-actions">
-                            <button onclick="app.deleteStock(${i.id})">Eliminar</button>
-                        </div>
-                    `;
-                    c.appendChild(d);
-                });
             },
 
             /* --- CLIENTES --- */
@@ -885,6 +858,40 @@
                 const rb = document.getElementById('result-box');
                 rb.className = 'result-box ' + (res >= 0 ? 'pos' : 'neg');
                 rb.innerText = (res >= 0 ? '+' : '') + res.toFixed(2) + ' €';
+            },
+
+            /* --- STOCK --- */
+            addStockItem: function() {
+                const txt = document.getElementById('stock-item').value.trim();
+                if(!txt) return;
+                this.data.stock.push({ id: Date.now(), text: txt, checked: false });
+                document.getElementById('stock-item').value = '';
+                this.saveData(); this.renderStock();
+            },
+            toggleStock: function(id) {
+                const i = this.data.stock.find(x => x.id === id);
+                if(i) { i.checked = !i.checked; this.saveData(); this.renderStock(); }
+            },
+            deleteStock: function(id) {
+                this.data.stock = this.data.stock.filter(i => i.id !== id);
+                this.saveData(); this.renderStock();
+            },
+            renderStock: function() {
+                const c = document.getElementById('stock-list'); c.innerHTML = '';
+                this.data.stock.forEach(i => {
+                    const d = document.createElement('div');
+                    d.className = `stock-item ${i.checked ? 'checked' : ''}`;
+                    d.innerHTML = `
+                        <div class="stock-item-left">
+                            <input type="checkbox" ${i.checked?'checked':''} onchange="app.toggleStock(${i.id})">
+                            <span class="stock-text">${i.text}</span>
+                        </div>
+                        <div class="list-actions">
+                            <button onclick="app.deleteStock(${i.id})">Eliminar</button>
+                        </div>
+                    `;
+                    c.appendChild(d);
+                });
             },
 
             /* --- ESTADÍSTICAS --- */
