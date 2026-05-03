@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AiresGM v1</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#D81B60">
+
+    <style>
+        /* --- VARIABLES Y RESET --- */
+        :root {
+            --primary-magenta: #D81B60;
+            --primary-magenta-dark: #ad1457;
+            --bg-light-blue: #E1F5FE;
+            --text-blue: #1A2C4E;
+            --white: #ffffff;
+            --gray-light: #B3E5FC;
+            --danger: #d9534f;
+            --success: #5cb85c;
+            --shadow: 0 4px 6px rgba(0,0,0,0.15);
+            --radius: 12px;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-magenta);
+            color: var(--text-blue);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        header {
+            background-color: var(--primary-magenta);
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            gap: 10px;
+        }
+
+        h1 { font-size: 1.1rem; font-weight: 700; color: var(--white); white-space: nowrap; flex-shrink: 0; }
+
+        .nav-header-container {
+            display: flex; overflow-x: auto; gap: 8px; padding-bottom: 2px; flex-grow: 1; justify-content: flex-end;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .nav-header-container::-webkit-scrollbar { display: none; }
+
+        .nav-btn-header {
+            background: rgba(255,255,255,0.2); color: var(--white); border: none;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+            white-space: nowrap; cursor: pointer; transition: background 0.2s;
+        }
+        .nav-btn-header:hover, .nav-btn-header.active { background: var(--white); color: var(--primary-magenta); }
+
+        /* --- CONTENIDO --- */
+        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; position: relative; }
+        .section {
+            display: none; background-color: var(--bg-light-blue); border-radius: var(--radius);
+            padding: 20px; min-height: 100%; box-shadow: var(--shadow); animation: fadeIn 0.3s ease;
+        }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { font-size: 1.4rem; margin-bottom: 20px; border-bottom: 2px solid var(--primary-magenta); padding-bottom: 10px; display: inline-block; }
+
+        /* --- BOTONES GENERALES --- */
+        .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--white); width: 100%; margin-bottom: 8px; font-size: 0.95rem; display:block;}
+        .btn-primary { background: var(--text-blue); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-secondary { background: #757575; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
+
+        .btn-add { background-color: var(--primary-magenta); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; width: auto; display:inline-block;}
+
+        .search-bar-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        #client-search { flex: 1; padding: 12px; border: 1px solid #B3E5FC; border-radius: 8px; background: var(--white); font-size: 1rem; }
+        .client-item { background: var(--white); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; cursor: pointer; }
+        .client-info h3 { font-size: 1rem; margin-bottom: 2px; }
+        .client-info p { font-size: 0.9rem; color: #666; }
+
+        /* --- GRID DE CITAS --- */
+        .date-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--white); padding: 10px; border-radius: var(--radius); }
+        .date-nav button { background: var(--primary-magenta); color: var(--white); border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
+        
+        .agenda-container { display: grid; grid-template-columns: 50px repeat(3, 1fr); gap: 2px; overflow-x: auto; padding-bottom: 20px; }
+        .time-label { text-align: right; padding-right: 5px; font-size: 0.8rem; color: #555; height: 40px; display: flex; align-items: center; justify-content: flex-end; }
+        
+        .slot { 
+            background-color: var(--white); border: 1px solid #B3E5FC; height: 40px; position: relative; 
+            cursor: pointer; transition: background 0.2s;
+        }
+        .slot:hover { background-color: var(--gray-light); }
+        .slot.day-closed {
+            background-color: #e0e0e0;
+            cursor: not-allowed;
+            border-color: transparent;
+        }
+        
+        /* Bloque de cita visible */
+        .appointment-block { 
+            position: absolute; top: 0; left: 1px; right: 1px; border-radius: 4px; padding: 4px; font-size: 0.8rem; /* Aumentado de 0.75rem */
+            overflow: hidden; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+            display: flex; flex-direction: column; justify-content: center;
+            /* Añadido Font-weight bold */
+            font-weight: bold; 
+            /* SIN pointer-events, dejar que el flujo de eventos siga al padre 'slot' */
+        }
+
+        .appointment-block.status-pending { background-color: #FFEB3B; color: #212121; border: 1px solid #FBC02D; }
+        .appointment-block.status-closed { background-color: var(--text-blue); color: white; }
+
+        /* --- LISTAS Y TARJETAS --- */
+        .summary-card { background-color: var(--white); padding: 15px; border-radius: var(--radius); margin-bottom: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .total-amount { font-size: 2rem; font-weight: bold; color: var(--primary-magenta); }
+        .list-group { list-style: none; margin-top: 15px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); background: var(--white); margin-bottom: 5px; border-radius: 8px; }
+        .list-actions button { background: none; border: none; cursor: pointer; font-size: 0.9rem; margin-left: 10px; color: var(--danger); font-weight: bold; }
+        .quick-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .quick-form input, .quick-form select { padding: 10px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; flex: 1; }
+        
+        .result-box { padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 20px; color: white; font-size: 1.5rem; font-weight: bold; }
+        .pos { background-color: var(--success); } .neg { background-color: var(--danger); }
+        
+        .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--white); border: 1px solid #B3E5FC; margin-bottom: 8px; border-radius: 8px; }
+        .stock-item-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .stock-item input[type="checkbox"] { transform: scale(1.2); accent-color: var(--primary-magenta); }
+
+        /* --- ESTADÍSTICAS --- */
+        .tabs { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 15px; padding-bottom: 5px; }
+        .tab-btn { background: var(--white); color: var(--text-blue); border: 1px solid #ccc; padding: 8px 12px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 0.9rem; flex-shrink: 0; }
+        .tab-btn.active { background: var(--primary-magenta); color: var(--white); border-color: var(--primary-magenta); }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        .chart-row { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.9rem; }
+        .chart-label { width: 80px; text-align: right; margin-right: 10px; font-weight: bold; }
+        .chart-bar-container { flex: 1; background: #eee; height: 20px; border-radius: 10px; overflow: hidden; position: relative; }
+        .chart-bar { height: 100%; background: var(--primary-magenta); width: 0%; transition: width 1s ease; }
+        .chart-value { margin-left: 10px; font-size: 0.85rem; width: 50px; }
+        
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal { background: var(--bg-light-blue); padding: 25px; width: 90%; max-width: 400px; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--primary-magenta); max-height: 90vh; overflow-y: auto; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold; color: var(--text-blue); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; font-family: inherit; }
+        .form-group input[readonly] { background: #eee; cursor: not-allowed; }
+
+        /* --- TOAST --- */
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: var(--text-blue); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 3000; }
+        #toast.show { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AiresGM v1</h1>
+        <div class="nav-header-container">
+            <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
+            <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
+            <button class="nav-btn-header" onclick="app.showSection('gastos', this)">Gastos</button>
+            <button class="nav-btn-header" onclick="app.showSection('resultados', this)">Resultados</button>
+            <button class="nav-btn-header" onclick="app.showSection('compras', this)">Compras</button>
+            <button class="nav-btn-header" onclick="app.showSection('stock', this)">Stock</button>
+            <button class="nav-btn-header" onclick="app.showSection('estadisticas', this)">Estadísticas</button>
+            <button class="nav-btn-header" onclick="app.showSection('clientes', this)">Clientes</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- SECCIÓN 1: CITAS -->
+        <section id="citas" class="section active">
+            <h2>Gestión de Citas</h2>
+            <div class="date-nav">
+                <button onclick="app.changeDay(-1)">&#10094;</button>
+                <span id="current-date-display">Hoy</span>
+                <button onclick="app.changeDay(1)">&#10095;</button>
+            </div>
+            <div class="agenda-container" id="agenda-grid"></div>
+            <div style="margin-top: 20px;">
+                <button id="btn-close-day" class="btn btn-success" onclick="app.closeDay()">Cerrar Día</button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: INGRESOS -->
+        <section id="ingresos" class="section">
+            <h2>Ingresos</h2>
+            <div class="summary-card">
+                <small>Total Ingresos</small>
+                <div class="total-amount" id="total-income">0.00 €</div>
+            </div>
+            <h3>Historial</h3>
+            <ul class="list-group" id="income-list"></ul>
+        </section>
+
+        <!-- SECCIÓN 3: GASTOS -->
+        <section id="gastos" class="section">
+            <h2>Gastos</h2>
+            <div class="quick-form">
+                <input type="number" id="expense-amount" placeholder="€">
+                <input type="text" id="expense-concept" placeholder="Concepto">
+                <input type="date" id="expense-date" title="Fecha del gasto">
+                <button class="btn-add" onclick="app.addExpense()">Añadir</button>
+            </div>
+            <div class="summary-card">
+                <small>Total Gastos</small>
+                <div class="total-amount" style="color:var(--danger)" id="total-expenses">0.00 €</div>
+            </div>
+            <ul class="list-group" id="expense-list"></ul>
+        </section>
+
+        <!-- SECCIÓN 4: RESULTADOS -->
+        <section id="resultados" class="section">
+            <h2>Resultados</h2>
+            <div class="summary-card">
+                <p>Ingresos: <span id="res-income">0.00 €</span></p>
+                <p>Gastos: <span id="res-expenses">0.00 €</span></p>
+            </div>
+            <div id="result-box" class="result-box pos">0.00 €</div>
+            <p style="text-align:center; margin-top:10px; font-size:0.9rem;">Balance Total</p>
+        </section>
+
+        <!-- SECCIÓN 5: COMPRAS -->
+        <section id="compras" class="section">
+            <h2>Gestión de Compras</h2>
+            <button class="btn-add" onclick="app.openPurchaseModal()">+ Nueva Compra</button>
+            <div style="margin-top: 20px;">
+                <ul class="list-group" id="purchase-list"></ul>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 6: STOCK -->
+        <section id="stock" class="section">
+            <h2>Lista de Compras</h2>
+            <div class="quick-form">
+                <input type="text" id="stock-item" placeholder="Producto">
+                <button class="btn-add" onclick="app.addStockItem()">Añadir</button>
+            </div>
+            <div id="stock-list"></div>
+        </section>
+
+        <!-- SECCIÓN 7: ESTADÍSTICAS -->
+        <section id="estadisticas" class="section">
+            <h2>Estadísticas</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="app.switchTab('tab-servicios')">Servicios</button>
+                <button class="tab-btn" onclick="app.switchTab('tab-dia-sem')">Día Semana</button>
+                <button class="tab-btn" onclick="app.switchTab('tab-comparativa')">Comparativa</button>
+                <button class="tab-btn" onclick="app.switchTab('tab-fact-dia')">Fact/Día</button>
+                <button class="tab-btn" onclick="app.switchTab('tab-fact-mes')">Fact/Mes</button>
+                <button class="tab-btn" onclick="app.switchTab('tab-ticket')">Ticket Medio</button>
+            </div>
+            <div id="tab-servicios" class="tab-content active"><h3>Servicios más solicitados</h3><div id="chart-services"></div></div>
+            <div id="tab-dia-sem" class="tab-content"><h3>Distribución por Día (Top 3)</h3><div id="chart-week-dist"></div></div>
+            <div id="tab-comparativa" class="tab-content"><h3>Comparativa Mensual</h3><div id="chart-month-phases"></div></div>
+            <div id="tab-fact-dia" class="tab-content"><h3>Ingresos por Día de la Semana</h3><div id="chart-rev-week" class="grid-bars"></div></div>
+            <div id="tab-fact-mes" class="tab-content"><h3>Ingresos por Día del Mes (1-31)</h3><div id="chart-rev-month" class="grid-bars"></div></div>
+            <div id="tab-ticket" class="tab-content"><h3>Ticket Medio por Día de la Semana</h3><div id="chart-ticket-week"></div></div>
+        </section>
+
+        <!-- SECCIÓN 8: CLIENTES -->
+        <section id="clientes" class="section">
+            <h2>Gestión de Clientes</h2>
+            <div class="search-bar-container">
+                <input type="text" id="client-search" placeholder="Buscar cliente..." oninput="app.filterClients()">
+                <button class="btn-add" style="padding:10px 15px;" onclick="app.createNewClient()">+</button>
+            </div>
+            <div id="client-list-container">
+                <ul class="client-list" id="client-list"></ul>
+                <p id="no-clients-msg" style="text-align:center; margin-top:20px; display:none;">No hay clientes.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL CREAR CITA -->
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal">
+            <h3>Nueva Cita</h3>
+            <input type="hidden" id="create-col">
+            <div class="form-group"><label>Hora</label><input type="text" id="create-time" readonly style="background:#eee;"></div>
+            <div class="form-group"><label>Duración (min)</label><select id="create-duration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hora</option><option value="90">1h 30min</option><option value="120">2 horas</option></select></div>
+            <div class="form-group"><label>Nombre</label><input type="text" id="create-client" placeholder="Nombre"></div>
+            <div class="form-group"><label>Servicio</label><input type="text" id="create-service" placeholder="Ej: Tinte, Corte..."></div>
+            <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00"></div>
+            <div class="form-group"><label>Observaciones</label><textarea id="create-obs" rows="2"></textarea></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="app.closeModal('create-modal')">Salir</button>
+                <button class="btn btn-success" onclick="app.createAppointment()">Crear Cita</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTIONAR CITA -->
+    <div class="modal-overlay" id="manage-modal">
+        <div class="modal">
+            <h3>Gestionar Cita</h3>
+            <input type="hidden" id="manage-id">
+            <div class="form-group"><label>Hora Inicio</label><input type="text" id="manage-time" readonly style="background:#eee;"></div>
+            <div class="form-group"><label>Nombre Cliente</label><input type="text" id="manage-client"></div>
+            <div class="form-group"><label>Servicio</label><input type="text" id="manage-service"></div>
+            <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price"></div>
+            <div class="form-group"><label>Observaciones</label><textarea id="manage-obs" rows="2"></textarea></div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="app.closeModal('manage-modal')">1) Salir</button>
+                <button class="btn btn-primary" onclick="app.modifyAppointment()">2) Modificar</button>
+                <button class="btn btn-danger" onclick="app.deleteCurrentAppointment()">3) Cancelar Reserva</button>
+                <button class="btn btn-success" onclick="app.closeCurrentAppointment()">4) Cerrar Reserva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COMPRAS -->
+    <div class="modal-overlay" id="purchase-modal">
+        <div class="modal">
+            <h3>Registrar Compra</h3>
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="purchase-date">
+            </div>
+            <div class="form-group">
+                <label>Lugar de Compra</label>
+                <input type="text" id="purchase-place" placeholder="Ej: Mercadona, Perfumería...">
+            </div>
+            <div class="form-group">
+                <label>Coste Total (€)</label>
+                <input type="number" id="purchase-cost" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Productos Comprados</label>
+                <textarea id="purchase-items" rows="4" placeholder="Lista de productos..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="app.closeModal('purchase-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="app.savePurchase()">Guardar Compra</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CLIENTES -->
+    <div class="modal-overlay" id="client-modal">
+        <div class="modal">
+            <h3>Ficha Cliente</h3>
+            <input type="hidden" id="client-id">
+            <div class="form-group"><label>Nombre</label><input type="text" id="client-name"></div>
+            <div class="form-group"><label>Apellido</label><input type="text" id="client-surname"></div>
+            <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:10px;">
+                <h4>Historial</h4>
+                <div style="max-height: 150px; overflow-y: auto;" id="client-history-list"></div>
+                <button class="btn-add" style="margin-top:10px;" onclick="app.openAddServiceWindow()">+ Añadir Servicio/Nota</button>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="app.closeModal('client-modal')">Cerrar</button>
+                <button class="btn btn-primary" onclick="app.saveClientChanges()">Guardar</button>
+                <button class="btn btn-danger" onclick="app.deleteClient()">Eliminar Ficha</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="service-modal">
+        <div class="modal">
+            <h3>Nuevo Servicio / Nota</h3>
+            <div class="form-group"><label>Fecha</label><input type="date" id="service-date"></div>
+            <div class="form-group"><label>Observaciones</label><textarea id="service-obs" rows="3"></textarea></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="app.closeModal('service-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="app.saveServiceToClient()">Añadir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Acción realizada</div>
+
+    <script>
+        const app = {
+            data: {
+                currentDate: new Date(),
+                appointments: [],
+                expenses: [],
+                purchases: [],
+                stock: [],
+                clients: [],
+                closedDays: [] 
+            },
+
+            init: function() {
+                this.loadData();
+                this.renderDate();
+                this.renderGrid();
+                document.getElementById('expense-date').value = this.getFormattedDate(new Date());
+            },
+
+            saveData: function() { localStorage.setItem('airesgm_data', JSON.stringify(this.data)); },
+            loadData: function() {
+                const stored = localStorage.getItem('airesgm_data');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    this.data.appointments = parsed.appointments || [];
+                    this.data.expenses = parsed.expenses || [];
+                    this.data.purchases = parsed.purchases || [];
+                    this.data.stock = parsed.stock || [];
+                    this.data.clients = parsed.clients || [];
+                    this.data.closedDays = parsed.closedDays || [];
+                }
+            },
+
+            /* --- NAVEGACIÓN --- */
+            showSection: function(id, btnElement) {
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                document.querySelectorAll('.nav-btn-header').forEach(b => b.classList.remove('active'));
+                if(btnElement) btnElement.classList.add('active');
+                if(id === 'ingresos') this.renderIncomes();
+                if(id === 'gastos') this.renderExpenses();
+                if(id === 'resultados') this.renderResults();
+                if(id === 'compras') this.renderPurchases();
+                if(id === 'stock') this.renderStock();
+                if(id === 'citas') { this.renderDate(); this.renderGrid(); }
+                if(id === 'estadisticas') this.renderEstadisticas();
+                if(id === 'clientes') this.renderClients();
+            },
+            
+            closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
+            openModal: function(id) { document.getElementById(id).classList.add('open'); },
+
+            /* --- COMPRAS --- */
+            openPurchaseModal: function() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('purchase-date').value = today;
+                document.getElementById('purchase-place').value = '';
+                document.getElementById('purchase-cost').value = '';
+                document.getElementById('purchase-items').value = '';
+                this.openModal('purchase-modal');
+            },
+            savePurchase: function() {
+                const date = document.getElementById('purchase-date').value;
+                const place = document.getElementById('purchase-place').value;
+                const cost = parseFloat(document.getElementById('purchase-cost').value) ||0;
+                const items = document.getElementById('purchase-items').value;
+
+                if(!place || !items) return this.showToast("Rellena lugar y productos");
+
+                this.data.purchases.push({
+                    id: Date.now(),
+                    date: date,
+                    place: place,
+                    cost: cost,
+                    items: items
+                });
+                this.saveData();
+                this.closeModal('purchase-modal');
+                this.renderPurchases();
+                this.showToast("Compra guardada");
+            },
+            renderPurchases: function() {
+                const list = document.getElementById('purchase-list');
+                list.innerHTML = '';
+                const sorted = [...this.data.purchases].sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                sorted.forEach(p => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${p.date}</strong> - ${p.place}<br>
+                            <small>${p.items}</small>
+                        </div>
+                        <div style="display:flex;align-items:center;">
+                            <span>${p.cost.toFixed(2)} €</span>
+                            <div class="list-actions">
+                                <button onclick="app.deletePurchase(${p.id})">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+            },
+            deletePurchase: function(id) {
+                if(confirm("¿Borrar esta compra?")) {
+                    this.data.purchases = this.data.purchases.filter(p => p.id !== id);
+                    this.saveData();
+                    this.renderPurchases();
+                }
+            },
+
+            /* --- LÓGICA DE CIERRE DE DÍA --- */
+            closeDay: function() {
+                if(confirm("¿Estás seguro de cerrar el día? No se podrán añadir, modificar ni cancelar citas ni gastos de esta fecha.")) {
+                    const dateStr = this.getFormattedDate(this.data.currentDate);
+                    if (!this.data.closedDays.includes(dateStr)) {
+                        this.data.closedDays.push(dateStr);
+                        this.saveData();
+                        this.renderGrid();
+                        this.showToast("Día cerrado correctamente");
+                    }
+                }
+            },
+
+            isDayClosed: function(dateStr) {
+                return this.data.closedDays.includes(dateStr);
+            },
+
+            /* --- CITAS LÓGICA --- */
+            getFormattedDate: function(d) { return d.toISOString().split('T')[0]; },
+            getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
+            changeDay: function(delta) { this.data.currentDate.setDate(this.data.currentDate.getDate() + delta); this.renderDate(); this.renderGrid(); },
+            renderDate: function() { const d = this.getDisplayDate(this.data.currentDate); document.getElementById('current-date-display').innerText = d.charAt(0).toUpperCase() + d.slice(1); },
+            
+            timeToMins: function(timeStr) {
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            },
+
+            // Manejador centralizado de clics
+            handleSlotClick: function(e, time, col, appId) {
+                e.stopPropagation();
+                
+                const currentStr = this.getFormattedDate(this.data.currentDate);
+                if(this.isDayClosed(currentStr)) {
+                    this.showToast("El día está cerrado. No se pueden modificar citas.");
+                    return;
+                }
+
+                if (appId) {
+                    this.openManageAppointment(appId);
+                } else {
+                    this.openCreateModal(time, col);
+                }
+            },
+
+            renderGrid: function() {
+                const grid = document.getElementById('agenda-grid');
+                grid.innerHTML = '';
+                const currentStr = this.getFormattedDate(this.data.currentDate);
+                const daysApps = this.data.appointments.filter(a => a.dateStr === currentStr).sort((a,b) => this.timeToMins(a.time) - this.timeToMins(b.time));
+
+                // Comprobar si el día está cerrado
+                const isClosed = this.isDayClosed(currentStr);
+                const closeBtn = document.getElementById('btn-close-day');
+                
+                if(isClosed) {
+                    closeBtn.innerText = "Día Cerrado";
+                    closeBtn.disabled = true;
+                    closeBtn.classList.remove('btn-success');
+                    closeBtn.classList.add('btn-secondary');
+                } else {
+                    closeBtn.innerText = "Cerrar Día";
+                    closeBtn.disabled = false;
+                    closeBtn.classList.add('btn-success');
+                    closeBtn.classList.remove('btn-secondary');
+                }
+
+                // CAMBIO: h <= 19 para que la última hora sea las 19:45
+                for (let h = 9; h <= 19; h++) {
+                    for (let m = 0; m < 60; m += 15) {
+                        const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+                        const currentMins = this.timeToMins(timeStr);
+                        
+                        // Etiqueta de hora
+                        const timeCell = document.createElement('div');
+                        timeCell.className = 'time-label';
+                        timeCell.innerText = timeStr;
+                        grid.appendChild(timeCell);
+                        
+                        for (let col = 1; col <= 3; col++) {
+                            const slot = document.createElement('div');
+                            slot.className = 'slot';
+                            if(isClosed) slot.classList.add('day-closed');
+                            
+                            // Verificar si hay una cita EMPEZANDO en este slot
+                            const startApp = daysApps.find(a => a.time === timeStr && a.col == col);
+                            
+                            // Verificar si este slot está OCUPADO por una cita anterior (duración)
+                            const activeApp = daysApps.find(a => {
+                                if (a.col !== col) return false;
+                                const startM = this.timeToMins(a.time);
+                                const endM = startM + a.duration;
+                                return (currentMins > startM && currentMins < endM);
+                            });
+
+                            let appIdToHandle = null;
+
+                            if (startApp) {
+                                // --- CASO 1: INICIO DE CITA ---
+                                appIdToHandle = startApp.id;
+                                slot.classList.add('occupied');
+                                if(startApp.status === 'closed') slot.classList.add('status-closed');
+                                
+                                const pxPerMin = 40 / 15;
+                                const statusClass = startApp.status === 'closed' ? 'status-closed' : 'status-pending';
+                                
+                                const block = document.createElement('div');
+                                block.className = `appointment-block ${statusClass}`;
+                                block.style.height = (startApp.duration * pxPerMin) + 'px';
+                                block.innerHTML = `<div class="app-client">${startApp.client}</div><div class="app-service">${startApp.service}</div>`;
+                                
+                                // NO ASIGNAMOS onclick al bloque. Se lo dejamos al padre.
+                                slot.appendChild(block);
+
+                            } else if (activeApp) {
+                                // --- CASO 2: DURACIÓN DE CITA ---
+                                appIdToHandle = activeApp.id;
+                                slot.classList.add('occupied');
+                                if(activeApp.status === 'closed') slot.classList.add('status-closed');
+                            }
+
+                            // --- CONTROLADOR DE CLIC ÚNICO ---
+                            // Detecta si tocaste el bloque o el fondo
+                            slot.onclick = (e) => this.handleSlotClick(e, time, col, appIdToHandle);
+
+                            grid.appendChild(slot);
+                        }
+                    }
+                }
+            },
+
+            /* --- GESTIÓN DE MODALES --- */
+            
+            // CREAR
+            openCreateModal: function(time, col) {
+                document.getElementById('create-time').value = time;
+                document.getElementById('create-col').value = col;
+                document.getElementById('create-client').value = '';
+                document.getElementById('create-service').value = '';
+                document.getElementById('create-price').value = '';
+                document.getElementById('create-obs').value = '';
+                document.getElementById('create-duration').value = '30';
+                this.openModal('create-modal');
+            },
+
+            createAppointment: function() {
+                const time = document.getElementById('create-time').value;
+                const col = parseInt(document.getElementById('create-col').value);
+                const dur = parseInt(document.getElementById('create-duration').value);
+                const cli = document.getElementById('create-client').value;
+                const srv = document.getElementById('create-service').value;
+                const prc = parseFloat(document.getElementById('create-price').value) || 0;
+                const obs = document.getElementById('create-obs').value;
+
+                if(!cli) return this.showToast("Falta nombre");
+
+                this.data.appointments.push({
+                    id: Date.now(), dateStr: this.getFormattedDate(this.data.currentDate),
+                    time: time, col: col, duration: dur, 
+                    client: cli, service: srv, price: prc, obs: obs, status: 'pending'
+                });
+                this.saveData(); this.closeModal('create-modal'); this.renderGrid(); this.showToast("Cita creada");
+            },
+
+            // GESTIONAR (EDITAR)
+            openManageAppointment: function(id) {
+                const appData = this.data.appointments.find(a => a.id === id);
+                if(!appData) return;
+                document.getElementById('manage-id').value = appData.id;
+                document.getElementById('manage-time').value = appData.time;
+                document.getElementById('manage-client').value = appData.client;
+                document.getElementById('manage-service').value = appData.service;
+                document.getElementById('manage-price').value = appData.price;
+                document.getElementById('manage-obs').value = appData.obs;
+                this.openModal('manage-modal');
+            },
+
+            modifyAppointment: function() {
+                const id = parseInt(document.getElementById('manage-id').value);
+                const appData = this.data.appointments.find(a => a.id === id);
+                if(appData) {
+                    appData.client = document.getElementById('manage-client').value;
+                    appData.service = document.getElementById('manage-service').value;
+                    appData.price = parseFloat(document.getElementById('manage-price').value) || 0;
+                    appData.obs = document.getElementById('manage-obs').value;
+                    this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Cita modificada");
+                }
+            },
+
+            deleteCurrentAppointment: function() {
+                if(confirm("¿Seguro que quieres cancelar esta reserva?")) {
+                    const id = parseInt(document.getElementById('manage-id').value);
+                    this.data.appointments = this.data.appointments.filter(a => a.id !== id);
+                    this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Reserva cancelada");
+                }
+            },
+
+            closeCurrentAppointment: function() {
+                const id = parseInt(document.getElementById('manage-id').value);
+                const appData = this.data.appointments.find(a => a.id === id);
+                if(appData) {
+                    appData.status = 'closed';
+                    this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Reserva cerrada");
+                }
+            },
+
+            /* --- STOCK --- */
+            addStockItem: function() {
+                const txt = document.getElementById('stock-item').value.trim();
+                if(!txt) return;
+                this.data.stock.push({ id: Date.now(), text: txt, checked: false });
+                document.getElementById('stock-item').value = '';
+                this.saveData(); this.renderStock();
+            },
+            toggleStock: function(id) {
+                const i = this.data.stock.find(x => x.id === id);
+                if(i) { i.checked = !i.checked; this.saveData(); this.renderStock(); }
+            },
+            deleteStock: function(id) {
+                this.data.stock = this.data.stock.filter(i => i.id !== id);
+                this.saveData(); this.renderStock();
+            },
+            renderStock: function() {
+                const c = document.getElementById('stock-list'); c.innerHTML = '';
+                this.data.stock.forEach(i => {
+                    const d = document.createElement('div');
+                    d.className = `stock-item ${i.checked ? 'checked' : ''}`;
+                    d.innerHTML = `
+                        <div class="stock-item-left">
+                            <input type="checkbox" ${i.checked?'checked':''} onchange="app.toggleStock(${i.id})">
+                            <span class="stock-text">${i.text}</span>
+                        </div>
+                        <div class="list-actions">
+                            <button onclick="app.deleteStock(${i.id})">Eliminar</button>
+                        </div>
+                    `;
+                    c.appendChild(d);
+                });
+            },
+
+            /* --- CLIENTES --- */
+            deleteClient: function() {
+                if(confirm("¿Estás seguro de ELIMINAR esta ficha de cliente?")) {
+                    const id = parseInt(document.getElementById('client-id').value);
+                    this.data.clients = this.data.clients.filter(c => c.id !== id);
+                    this.saveData();
+                    this.closeModal('client-modal');
+                    this.renderClients();
+                    this.showToast("Ficha eliminada");
+                }
+            },
+
+            renderClients: function() {
+                const list = document.getElementById('client-list');
+                const search = document.getElementById('client-search').value.toLowerCase();
+                list.innerHTML = '';
+                const filtered = this.data.clients.filter(c => (c.name + ' ' + c.surname).toLowerCase().includes(search));
+                if (filtered.length === 0) {
+                    document.getElementById('no-clients-msg').style.display = 'block';
+                } else {
+                    document.getElementById('no-clients-msg').style.display = 'none';
+                    filtered.forEach(c => {
+                        const li = document.createElement('li');
+                        li.className = 'client-item';
+                        li.innerHTML = `<div class="client-info"><h3>${c.name}</h3><p>${c.surname}</p></div><div style="color:#ccc;">&#10095;</div>`;
+                        li.onclick = () => this.openClientDetail(c.id);
+                        list.appendChild(li);
+                    });
+                }
+            },
+            filterClients: function() { this.renderClients(); },
+            createNewClient: function() {
+                const id = Date.now();
+                const newClient = { id: id, name: 'Nuevo', surname: 'Cliente', history: [] };
+                this.data.clients.push(newClient);
+                this.saveData();
+                this.openClientDetail(id);
+            },
+            openClientDetail: function(id) {
+                const client = this.data.clients.find(c => c.id === id);
+                if(!client) return;
+                document.getElementById('client-id').value = client.id;
+                document.getElementById('client-name').value = client.name;
+                document.getElementById('client-surname').value = client.surname;
+                this.renderClientHistory(client.history);
+                this.openModal('client-modal');
+            },
+            saveClientChanges: function() {
+                const id = parseInt(document.getElementById('client-id').value);
+                const client = this.data.clients.find(c => c.id === id);
+                if(client) {
+                    client.name = document.getElementById('client-name').value;
+                    client.surname = document.getElementById('client-surname').value;
+                    this.saveData();
+                    this.renderClients();
+                    this.closeModal('client-modal');
+                    this.showToast("Ficha actualizada");
+                }
+            },
+            renderClientHistory: function(history) {
+                const list = document.getElementById('client-history-list');
+                list.innerHTML = '';
+                const sorted = [...history].sort((a,b) => new Date(b.date) - new Date(a.date));
+                sorted.forEach(h => {
+                    const div = document.createElement('div');
+                    div.style.cssText = "background:var(--white); padding:10px; border-radius:6px; margin-bottom:8px; border-left:4px solid var(--primary-magenta);";
+                    div.innerHTML = `<div style="font-size:0.8rem;color:#888;font-weight:bold;">${h.date}</div><div>${h.obs}</div>`;
+                    list.appendChild(div);
+                });
+                if(sorted.length === 0) list.innerHTML = '<p style="color:#888; font-size:0.9rem;">Sin historial.</p>';
+            },
+            openAddServiceWindow: function() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('service-date').value = today;
+                document.getElementById('service-obs').value = '';
+                this.openModal('service-modal');
+            },
+            saveServiceToClient: function() {
+                const id = parseInt(document.getElementById('client-id').value);
+                const client = this.data.clients.find(c => c.id === id);
+                const date = document.getElementById('service-date').value;
+                const obs = document.getElementById('service-obs').value;
+                if(!date || !obs) return;
+                client.history.push({ date: date, obs: obs });
+                this.saveData();
+                this.renderClientHistory(client.history);
+                this.closeModal('service-modal');
+            },
+
+            /* --- GASTOS --- */
+            addExpense: function() {
+                const amt = parseFloat(document.getElementById('expense-amount').value);
+                const con = document.getElementById('expense-concept').value;
+                const dateStr = document.getElementById('expense-date').value;
+                
+                if(!amt || !con) return this.showToast("Rellena campos");
+                
+                if(this.isDayClosed(dateStr)) {
+                    return this.showToast("No se pueden añadir gastos a un día cerrado.");
+                }
+
+                this.data.expenses.push({ id: Date.now(), amount: amt, concept: con, date: dateStr });
+                document.getElementById('expense-amount').value = ''; document.getElementById('expense-concept').value = '';
+                this.saveData(); this.renderExpenses(); this.showToast("Gasto añadido");
+            },
+            renderExpenses: function() {
+                const list = document.getElementById('expense-list'); list.innerHTML = '';
+                let tot = 0;
+                [...this.data.expenses].sort((a,b)=>b.id-a.id).forEach(e => {
+                    tot += e.amount;
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div>`;
+                    list.appendChild(li);
+                });
+                document.getElementById('total-expenses').innerText = tot.toFixed(2) + ' €';
+            },
+            deleteExpense: function(id) { 
+                this.data.expenses = this.data.expenses.filter(e => e.id !== id); 
+                this.saveData(); 
+                this.renderExpenses(); 
+            },
+
+            /* --- INGRESOS --- */
+            renderIncomes: function() {
+                const list = document.getElementById('income-list'); list.innerHTML = '';
+                let tot = 0;
+                [...this.data.appointments].sort((a,b)=>b.id-a.id).forEach(a => {
+                    if(a.price > 0) {
+                        tot += a.price;
+                        const li = document.createElement('li');
+                        li.className = 'list-item';
+                        li.innerHTML = `<div><strong>${a.client}</strong> - ${a.service}<br><small>${a.dateStr}</small></div><div>${a.price.toFixed(2)} €</div>`;
+                        list.appendChild(li);
+                    }
+                });
+                document.getElementById('total-income').innerText = tot.toFixed(2) + ' €';
+            },
+
+            /* --- RESULTADOS --- */
+            renderResults: function() {
+                const inc = this.data.appointments.reduce((s, a) => s + (a.price || 0), 0);
+                const exp = this.data.expenses.reduce((s, e) => s + e.amount, 0);
+                const res = inc - exp;
+                document.getElementById('res-income').innerText = inc.toFixed(2) + ' €';
+                document.getElementById('res-expenses').innerText = exp.toFixed(2) + ' €';
+                const rb = document.getElementById('result-box');
+                rb.className = 'result-box ' + (res >= 0 ? 'pos' : 'neg');
+                rb.innerText = (res >= 0 ? '+' : '') + res.toFixed(2) + ' €';
+            },
+
+            /* --- ESTADÍSTICAS --- */
+            switchTab: function(tabId) {
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                event.target.classList.add('active');
+            },
+            renderEstadisticas: function() {
+                const apps = this.data.appointments;
+                if (apps.length === 0) return;
+                const serviceCounts = {};
+                apps.forEach(a => { const s = (a.service || "Sin definir").trim(); serviceCounts[s] = (serviceCounts[s] || 0) + 1; });
+                const sortedServices = Object.entries(serviceCounts).sort((a,b) => b[1] - a[1]);
+                const totalApps = apps.length;
+                let htmlServices = "";
+                sortedServices.forEach(([name, count]) => {
+                    const pct = ((count / totalApps) * 100).toFixed(1);
+                    htmlServices += `<div class="chart-row"><div class="chart-label">${name}</div><div class="chart-bar-container"><div class="chart-bar" style="width: ${pct}%"></div></div><div class="chart-value">${pct}%</div></div>`;
+                });
+                document.getElementById('chart-services').innerHTML = htmlServices;
+            },
+
+            showToast: function(m) {
+                const t = document.getElementById('toast');
+                t.innerText = m; t.classList.add('show');
+                setTimeout(() => t.classList.remove('show'), 3000);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { app.init(); });
+    </script>
+</body>
+</html>
