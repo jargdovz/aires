@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- METADATOS ESPECÍFICOS (GITHUB/ANDROID) -->
     <title>AiresGM v1</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="apple-touch-icon" href="icono.png">
+    <meta name="project-info" content="airesgm - v1">
+    <meta name="application-name" content="airesgm - v1">
+    <meta name="apple-mobile-web-app-title" content="AiresGM v1">
+    <meta name="description" content="Gestión integral para peluquería">
+    
+    <!-- ICONOS -->
     <link rel="icon" href="icono.png">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icono.png">
+
     <meta name="theme-color" content="#D81B60">
 
     <style>
@@ -47,7 +53,7 @@
             justify-content: space-between;
             box-shadow: var(--shadow);
             z-index: 1000;
-            gap: 10px;
+            gap: 8px;
         }
 
         h1 { font-size: 1.1rem; font-weight: 700; color: var(--white); white-space: nowrap; flex-shrink: 0; }
@@ -65,6 +71,19 @@
         }
         .nav-btn-header:hover, .nav-btn-header.active { background: var(--white); color: var(--primary-magenta); }
 
+        /* Botón de Sincronización */
+        .nav-btn-sync {
+            background: rgba(255,255,255,0.3);
+            color: var(--white);
+            font-size: 1.2rem;
+            padding: 0 10px;
+            cursor: pointer;
+            display: flex; align-items: center;
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+        .nav-btn-sync:active { background: var(--white); color: var(--primary-magenta); }
+
         /* --- CONTENIDO --- */
         main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; position: relative; }
         .section {
@@ -76,14 +95,14 @@
         h2 { font-size: 1.4rem; margin-bottom: 20px; border-bottom: 2px solid var(--primary-magenta); padding-bottom: 10px; display: inline-block; }
 
         /* --- BOTONES GENERALES --- */
-        .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--white); width: 100%; margin-bottom: 8px; font-size: 0.95rem; display:block;}
+        .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--white); width: 100%; margin-bottom: 8px; font-size: 0.95rem; display:block; }
         .btn-primary { background: var(--text-blue); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-secondary { background: #757575; }
         .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
 
-        .btn-add { background-color: var(--primary-magenta); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; width: auto; display:inline-block;}
+        .btn-add { background-color: var(--primary-magenta); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; width: auto; display: inline-block;}
 
         .search-bar-container { display: flex; gap: 10px; margin-bottom: 20px; }
         #client-search { flex: 1; padding: 12px; border: 1px solid #B3E5FC; border-radius: 8px; background: var(--white); font-size: 1rem; }
@@ -103,20 +122,14 @@
             cursor: pointer; transition: background 0.2s;
         }
         .slot:hover { background-color: var(--gray-light); }
-        .slot.day-closed {
-            background-color: #e0e0e0;
-            cursor: not-allowed;
-            border-color: transparent;
-        }
+        .slot.day-closed { background-color: #e0e0e0; cursor: not-allowed; border-color: transparent; }
         
         /* Bloque de cita visible */
         .appointment-block { 
             position: absolute; top: 0; left: 1px; right: 1px; border-radius: 4px; padding: 4px; font-size: 0.8rem; 
             overflow: hidden; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
             display: flex; flex-direction: column; justify-content: center;
-            /* IMPORTANTE: Permitir interacción */
-            pointer-events: auto;
-            font-weight: bold; /* Fuente negrita */
+            pointer-events: auto; font-weight: bold; 
         }
 
         .appointment-block.status-pending { background-color: #FFEB3B; color: #212121; border: 1px solid #FBC02D; }
@@ -159,6 +172,11 @@
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; font-family: inherit; }
         .form-group input[readonly] { background: #eee; cursor: not-allowed; }
 
+        /* Area de texto para copiar el código */
+        #sync-data-display {
+            width: 100%; height: 100px; font-size: 0.7rem; font-family: monospace; border: 1px solid #ccc; padding: 10px; background: var(--white); margin-bottom: 10px; color: #555; resize: vertical;
+        }
+
         /* --- TOAST --- */
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: var(--text-blue); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 3000; }
         #toast.show { opacity: 1; }
@@ -169,222 +187,240 @@
 
     <header>
         <h1>AiresGM v1</h1>
-        <div class="nav-header-container">
-            <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
-            <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
-            <button class="nav-btn-header" onclick="app.showSection('gastos', this)">Gastos</button>
-            <button class="nav-btn-header" onclick="app.showSection('resultados', this)">Resultados</button>
-            <button class="nav-btn-header" onclick="app.showSection('compras', this)">Compras</button>
-            <button class="nav-btn-header" onclick="app.showSection('stock', this)">Stock</button>
-            <button class="nav-btn-header" onclick="app.showSection('estadisticas', this)">Estadísticas</button>
-            <button class="nav-btn-header" onclick="app.showSection('clientes', this)">Clientes</button>
-        </div>
-    </header>
-
-    <main>
-        <!-- SECCIÓN 1: CITAS -->
-        <section id="citas" class="section active">
-            <h2>Gestión de Citas</h2>
-            <div class="date-nav">
-                <button onclick="app.changeDay(-1)">&#10094;</button>
-                <span id="current-date-display">Hoy</span>
-                <button onclick="app.changeDay(1)">&#10095;</button>
-            </div>
-            <div class="agenda-container" id="agenda-grid"></div>
-            <div style="margin-top: 20px;">
-                <button id="btn-close-day" class="btn btn-success" onclick="app.closeDay()">Cerrar Día</button>
-            </div>
-        </section>
-
-        <!-- SECCIÓN 2: INGRESOS -->
-        <section id="ingresos" class="section">
-            <h2>Ingresos</h2>
-            <div class="summary-card">
-                <small>Total Ingresos</small>
-                <div class="total-amount" id="total-income">0.00 €</div>
-            </div>
-            <h3>Historial</h3>
-            <ul class="list-group" id="income-list"></ul>
-        </section>
-
-        <!-- SECCIÓN 3: GASTOS -->
-        <section id="gastos" class="section">
-            <h2>Gastos</h2>
-            <div class="quick-form">
-                <input type="number" id="expense-amount" placeholder="€">
-                <input type="text" id="expense-concept" placeholder="Concepto">
-                <input type="date" id="expense-date" title="Fecha del gasto">
-                <button class="btn-add" onclick="app.addExpense()">Añadir</button>
-            </div>
-            <div class="summary-card">
-                <small>Total Gastos</small>
-                <div class="total-amount" style="color:var(--danger)" id="total-expenses">0.00 €</div>
-            </div>
-            <ul class="list-group" id="expense-list"></ul>
-        </section>
-
-        <!-- SECCIÓN 4: RESULTADOS -->
-        <section id="resultados" class="section">
-            <h2>Resultados</h2>
-            <div class="summary-card">
-                <p>Ingresos: <span id="res-income">0.00 €</span></p>
-                <p>Gastos: <span id="res-expenses">0.00 €</span></p>
-            </div>
-            <div id="result-box" class="result-box pos">0.00 €</div>
-            <p style="text-align:center; margin-top:10px; font-size:0.9rem;">Balance Total</p>
-        </section>
-
-        <!-- SECCIÓN 5: COMPRAS -->
-        <section id="compras" class="section">
-            <h2>Gestión de Compras</h2>
-            <button class="btn-add" onclick="app.openPurchaseModal()">+ Nueva Compra</button>
-            <div style="margin-top: 20px;">
-                <ul class="list-group" id="purchase-list">
-                    <!-- Lista de compras -->
-                </ul>
-            </div>
-        </section>
-
-        <!-- SECCIÓN 6: STOCK -->
-        <section id="stock" class="section">
-            <h2>Lista de Compras</h2>
-            <div class="quick-form">
-                <input type="text" id="stock-item" placeholder="Producto">
-                <button class="btn-add" onclick="app.addStockItem()">Añadir</button>
-            </div>
-            <div id="stock-list"></div>
-        </section>
-
-        <!-- SECCIÓN 7: ESTADÍSTICAS -->
-        <section id="estadisticas" class="section">
-            <h2>Estadísticas</h2>
-            <div class="tabs">
-                <button class="tab-btn active" onclick="app.switchTab('tab-servicios')">Servicios</button>
-                <button class="tab-btn" onclick="app.switchTab('tab-dia-sem')">Día Semana</button>
-                <button class="tab-btn" onclick="app.switchTab('tab-comparativa')">Comparativa</button>
-                <button class="tab-btn" onclick="app.switchTab('tab-fact-dia')">Fact/Día</button>
-                <button class="tab-btn" onclick="app.switchTab('tab-fact-mes')">Fact/Mes</button>
-                <button class="tab-btn" onclick="app.switchTab('tab-ticket')">Ticket Medio</button>
-            </div>
-            <div id="tab-servicios" class="tab-content active"><h3>Servicios más solicitados</h3><div id="chart-services"></div></div>
-            <div id="tab-dia-sem" class="tab-content"><h3>Distribución por Día (Top 3)</h3><div id="chart-week-dist"></div></div>
-            <div id="tab-comparativa" class="tab-content"><h3>Comparativa Mensual</h3><div id="chart-month-phases"></div></div>
-            <div id="tab-fact-dia" class="tab-content"><h3>Ingresos por Día de la Semana</h3><div id="chart-rev-week" class="grid-bars"></div></div>
-            <div id="tab-fact-mes" class="tab-content"><h3>Ingresos por Día del Mes (1-31)</h3><div id="chart-rev-month" class="grid-bars"></div></div>
-            <div id="tab-ticket" class="tab-content"><h3>Ticket Medio por Día de la Semana</h3><div id="chart-ticket-week"></div></div>
-        </section>
-
-        <!-- SECCIÓN 8: CLIENTES -->
-        <section id="clientes" class="section">
-            <h2>Gestión de Clientes</h2>
-            <div class="search-bar-container">
-                <input type="text" id="client-search" placeholder="Buscar cliente..." oninput="app.filterClients()">
-                <button class="btn-add" style="padding:10px 15px;" onclick="app.createNewClient()">+</button>
-            </div>
-            <div id="client-list-container">
-                <ul class="client-list" id="client-list"></ul>
-                <p id="no-clients-msg" style="text-align:center; margin-top:20px; display:none;">No hay clientes.</p>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- MODAL CREAR CITA -->
-    <div class="modal-overlay" id="create-modal">
-        <div class="modal">
-            <h3>Nueva Cita</h3>
-            <input type="hidden" id="create-col">
-            <div class="form-group"><label>Hora</label><input type="text" id="create-time" readonly style="background:#eee;"></div>
-            <div class="form-group"><label>Duración (min)</label><select id="create-duration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hora</option><option value="90">1h 30min</option><option value="120">2 horas</option></select></div>
-            <div class="form-group"><label>Nombre</label><input type="text" id="create-client" placeholder="Nombre"></div>
-            <div class="form-group"><label>Servicio</label><input type="text" id="create-service" placeholder="Ej: Tinte, Corte..."></div>
-            <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00"></div>
-            <div class="form-group"><label>Observaciones</label><textarea id="create-obs" rows="2"></textarea></div>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('create-modal')">Salir</button>
-                <button class="btn btn-success" onclick="app.createAppointment()">Crear Cita</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL GESTIONAR CITA -->
-    <div class="modal-overlay" id="manage-modal">
-        <div class="modal">
-            <h3>Gestionar Cita</h3>
-            <input type="hidden" id="manage-id">
-            <div class="form-group"><label>Hora Inicio</label><input type="text" id="manage-time" readonly style="background:#eee;"></div>
-            <div class="form-group"><label>Nombre Cliente</label><input type="text" id="manage-client"></div>
-            <div class="form-group"><label>Servicio</label><input type="text" id="manage-service"></div>
-            <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price"></div>
-            <div class="form-group"><label>Observaciones</label><textarea id="manage-obs" rows="2"></textarea></div>
+        <div style="display:flex; align-items:center; gap:10px; flex-grow: 1; justify-content: flex-end;">
+            <!-- Botón de Sincronización -->
+            <button class="nav-btn-sync" onclick="app.showSyncModal()">⬇ Sincre</button>
             
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('manage-modal')">1) Salir</button>
-                <button class="btn btn-primary" onclick="app.modifyAppointment()">2) Modificar</button>
-                <button class="btn btn-danger" onclick="app.deleteCurrentAppointment()">3) Cancelar Reserva</button>
-                <button class="btn btn-success" onclick="app.closeCurrentAppointment()">4) Cerrar Reserva</button>
+            <!-- Menú de Navegación -->
+            <div class="nav-header-container">
+                <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
+                <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
+                <button class="nav-btn-header" onclick="app.showSection('gastos', this)">Gastos</button>
+                <button class="nav-btn-header" onclick="app.showSection('resultados', this)">Resultados</button>
+                <button class="nav-btn-header" onclick="app.showSection('compras', this)">Compras</button>
+                <button class="nav-btn-header" onclick="app.showSection('stock', this)">Stock</button>
+                <button class="nav-btn-header" onclick="app.showSection('estadisticas', this)">Estadísticas</button>
+                <button class="nav-btn-header" onclick="app.showSection('clientes', this)">Clientes</button>
             </div>
-        </div>
-    </div>
+        </header>
 
-    <!-- MODAL COMPRAS -->
-    <div class="modal-overlay" id="purchase-modal">
-        <div class="modal">
-            <h3>Registrar Compra</h3>
-            <div class="form-group">
-                <label>Fecha</label>
-                <input type="date" id="purchase-date">
-            </div>
-            <div class="form-group">
-                <label>Lugar de Compra</label>
-                <input type="text" id="purchase-place" placeholder="Ej: Mercadona, Perfumería...">
-            </div>
-            <div class="form-group">
-                <label>Coste Total (€)</label>
-                <input type="number" id="purchase-cost" placeholder="0.00">
-            </div>
-            <div class="form-group">
-                <label>Productos Comprados</label>
-                <textarea id="purchase-items" rows="4" placeholder="Lista de productos..."></textarea>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('purchase-modal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="app.savePurchase()">Guardar Compra</button>
-            </div>
-        </div>
-    </div>
+        <main>
+            <!-- SECCIÓN 1: CITAS -->
+            <section id="citas" class="section active">
+                <h2>Gestión de Citas</h2>
+                <div class="date-nav">
+                    <button onclick="app.changeDay(-1)">&#10094;</button>
+                    <span id="current-date-display">Hoy</span>
+                    <button onclick="app.changeDay(1)">&#10095;</button>
+                </div>
+                <div class="agenda-container" id="agenda-grid"></div>
+                <div style="margin-top: 20px;">
+                    <button id="btn-close-day" class="btn btn-success" onclick="app.closeDay()">Cerrar Día</button>
+                </div>
+            </section>
 
-    <!-- MODAL CLIENTES -->
-    <div class="modal-overlay" id="client-modal">
-        <div class="modal">
-            <h3>Ficha Cliente</h3>
-            <input type="hidden" id="client-id">
-            <div class="form-group"><label>Nombre</label><input type="text" id="client-name"></div>
-            <div class="form-group"><label>Apellido</label><input type="text" id="client-surname"></div>
-            <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:10px;">
-                <h4>Historial</h4>
-                <div style="max-height: 150px; overflow-y: auto;" id="client-history-list"></div>
-                <button class="btn-add" style="margin-top:10px;" onclick="app.openAddServiceWindow()">+ Añadir Servicio/Nota</button>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('client-modal')">Cerrar</button>
-                <button class="btn btn-primary" onclick="app.saveClientChanges()">Guardar</button>
-                <button class="btn btn-danger" onclick="app.deleteClient()">Eliminar Ficha</button>
-            </div>
-        </div>
-    </div>
+            <!-- SECCIÓN 2: INGRESOS -->
+            <section id="ingresos" class="section">
+                <h2>Ingresos</h2>
+                <div class="summary-card">
+                    <small>Total Ingresos</small>
+                    <div class="total-amount" id="total-income">0.00 €</div>
+                </div>
+                <h3>Historial</h3>
+                <ul class="list-group" id="income-list"></ul>
+            </section>
 
-    <div class="modal-overlay" id="service-modal">
-        <div class="modal">
-            <h3>Nuevo Servicio / Nota</h3>
-            <div class="form-group"><label>Fecha</label><input type="date" id="service-date"></div>
-            <div class="form-group"><label>Observaciones</label><textarea id="service-obs" rows="3"></textarea></div>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('service-modal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="app.saveServiceToClient()">Añadir</button>
+            <!-- SECCIÓN 3: GASTOS -->
+            <section id="gastos" class="section">
+                <h2>Gastos</h2>
+                <div class="quick-form">
+                    <input type="number" id="expense-amount" placeholder="€">
+                    <input type="text" id="expense-concept" placeholder="Concepto">
+                    <input type="date" id="expense-date" title="Fecha del gasto">
+                    <button class="btn-add" onclick="app.addExpense()">Añadir</button>
+                </div>
+                <div class="summary-card">
+                    <small>Total Gastos</small>
+                    <div class="total-amount" style="color:var(--danger)" id="total-expenses">0.00 €</div>
+                </div>
+                <ul class="list-group" id="expense-list"></ul>
+            </section>
+
+            <!-- SECCIÓN 4: RESULTADOS -->
+            <section id="resultados" class="section">
+                <h2>Resultados</h2>
+                <div class="summary-card">
+                    <p>Ingresos: <span id="res-income">0.00 €</span></p>
+                    <p>Gastos: <span id="res-expenses">0.00 €</span></p>
+                </div>
+                <div id="result-box" class="result-box pos">0.00 €</div>
+                <p style="text-align:center; margin-top:10px; font-size:0.9rem;">Balance Total</p>
+            </section>
+
+            <!-- SECCIÓN 5: COMPRAS -->
+            <section id="compras" class="section">
+                <h2>Gestión de Compras</h2>
+                <button class="btn-add" onclick="app.openPurchaseModal()">+ Nueva Compra</button>
+                <div style="margin-top: 20px;">
+                    <ul class="list-group" id="purchase-list">
+                        <!-- Lista de compras -->
+                    </ul>
+                </div>
+            </section>
+
+            <!-- SECCIÓN 6: STOCK -->
+            <section id="stock" class="section">
+                <h2>Lista de Compras</h2>
+                <div class="quick-form">
+                    <input type="text" id="stock-item" placeholder="Producto">
+                    <button class="btn-add" onclick="app.addStockItem()">Añadir</button>
+                </div>
+                <div id="stock-list"></div>
+            </section>
+
+            <!-- SECCIÓN 7: ESTADÍSTICAS -->
+            <section id="estadisticas" class="section">
+                <h2>Estadísticas</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="app.switchTab('tab-servicios')">Servicios</button>
+                    <button class="tab-btn" onclick="app.switchTab('tab-dia-sem')">Día Semana</button>
+                    <button class="tab-btn" onclick="app.switchTab('tab-comparativa')">Comparativa</button>
+                    <button class="tab-btn" onclick="app.switchTab('tab-fact-dia')">Fact/Día</button>
+                    <button class="tab-btn" onclick="app.switchTab('tab-fact-mes')">Fact/Mes</button>
+                    <button class="tab-btn" onclick="app.switchTab('tab-ticket')">Ticket Medio</button>
+                </div>
+                <div id="tab-servicios" class="tab-content active"><h3>Servicios más solicitados</h3><div id="chart-services"></div>
+                <div id="tab-dia-sem" class="tab-content"><h3>Distribución por Día (Top 3)</h3><div id="chart-week-dist"></div>
+                <div id="tab-comparativa" class="tab-content"><h3>Comparativa Mensual</h3><div id="chart-month-phases"></div>
+                <div id="tab-fact-dia" class="tab-content"><h3>Ingresos por Día de la Semana</h3><div id="chart-rev-week" class="grid-bars"></div>
+                <div id="tab-fact-mes" class="tab-content"><h3>Ingresos por Día del Mes (1-31)</h3><div id="chart-rev-month" class="grid-bars"></div>
+                <div id="tab-ticket" class="tab-content"><h3>Ticket Medio por Día de la Semana</h3><div id="chart-ticket-week"></div>
+            </section>
+
+            <!-- SECCIÓN 8: CLIENTES -->
+            <section id="clientes" class="section">
+                <h2>Gestión de Clientes</h2>
+                <div class="search-bar-container">
+                    <input type="text" id="client-search" placeholder="Buscar cliente..." oninput="app.filterClients()">
+                    <button class="btn-add" style="padding:10px 15px;" onclick="app.createNewClient()">+</button>
+                </div>
+                <div id="client-list-container">
+                    <ul class="client-list" id="client-list"></ul>
+                    <p id="no-clients-msg" style="text-align:center; margin-top:20px; display:none;">No hay clientes.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- INPUT OCULTO PARA IMPORTAR ARCHIVO -->
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="app.importData(this)">
+
+        <!-- MODAL SINCRONIZACIÓN (El "Código Secreto") -->
+        <div class="modal-overlay" id="sync-modal">
+            <div class="modal">
+                <h3>Sincronizar Datos</h3>
+                <p style="font-size: 0.9rem; color: #555; line-height: 1.4; text-align: justify;">
+                    Como no hay servidor en medio, usa este método para copiar los datos.
+                </p>
+                <div class="form-group">
+                    <label>1. Copiar Datos (Para enviar a tu mujer)</label>
+                    <div id="sync-data-display" readonly>Click para copiar</div>
+                </div>
+                <div class="form-group">
+                    <label>2. Pegar Datos (Para recibir datos)</label>
+                    <textarea id="sync-data-input" placeholder="Pega aquí el código recibido..."></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="app.closeModal('sync-modal')">Cerrar</button>
+                    <button class="btn btn-primary" onclick="app.pasteSyncData()">Cargar Datos</button>
+                </div>
             </div>
         </div>
-    </div>
+
+        <!-- MODAL CREAR CITA -->
+        <div class="modal-overlay" id="create-modal">
+            <div class="modal">
+                <h3>Nueva Cita</h3>
+                <input type="hidden" id="create-col">
+                <div class="form-group"><label>Hora</label><input type="text" id="create-time" readonly style="background:#eee;"></div>
+                <div class="form-group"><label>Duración (min)</label><select id="create-duration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hora</option><option value="90">1h 30min</option><option value="120">2 horas</option></select></div>
+                <div class="form-group"><label>Nombre</label><input type="text" id="create-client" placeholder="Nombre"></div>
+                <div class="form-group"><label>Servicio</label><input type="text" id="create-service" placeholder="Ej: Tinte, Corte..."></div>
+                <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00"></div>
+                <div class="form-group"><label>Observaciones</label><textarea id="create-obs" rows="2"></textarea></div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="app.closeModal('create-modal')">Salir</button>
+                    <button class="btn btn-success" onclick="app.createAppointment()">Crear Cita</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL GESTIONAR CITA -->
+        <div class="modal-overlay" id="manage-modal">
+            <div class="modal">
+                <h3>Gestionar Cita</h3>
+                <input type="hidden" id="manage-id">
+                <div class="form-group"><label>Hora Inicio</label><input type="text" id="manage-time" readonly style="background:#eee;"></div>
+                <div class="form-group"><label>Nombre Cliente</label><input type="text" id="manage-client"></div>
+                <div class="form-group"><label>Servicio</label><input type="text" id="manage-service"></div>
+                <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price"></div>
+                <div class="form-group"><label>Observaciones</label><textarea id="manage-obs" rows="2"></textarea></div>
+                
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="app.closeModal('manage-modal')">1) Salir</button>
+                    <button class="btn btn-primary" onclick="app.modifyAppointment()">2) Modificar</button>
+                    <button class="btn btn-danger" onclick="app.deleteCurrentAppointment()">3) Cancelar Reserva</button>
+                    <button class="btn btn-success" onclick="app.closeCurrentAppointment()">4) Cerrar Reserva</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL COMPRAS -->
+        <div class="modal-overlay" id="purchase-modal">
+            <div class="modal">
+                <h3>Registrar Compra</h3>
+                <div class="form-group"><label>Fecha</label><input type="date" id="purchase-date"></div>
+                <div class="form-group"><label>Lugar de Compra</label><input type="text" id="purchase-place" placeholder="Ej: Mercadona, Perfumería..."></div>
+                <div class="form-group"><label>Coste Total (€)</label><input type="number" id="purchase-cost" placeholder="0.00"></div>
+                <div class="form-group"><label>Productos Comprados</label><textarea id="purchase-items" rows="4" placeholder="Lista de productos..."></textarea></div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="app.closeModal('purchase-modal')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="app.savePurchase()">Guardar Compra</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL CLIENTES -->
+        <div class="modal-overlay" id="client-modal">
+            <div class="modal">
+                <h3>Ficha Cliente</h3>
+                <input type="hidden" id="client-id">
+                <div class="form-group"><label>Nombre</label><input type="text" id="client-name"></div>
+                <div class="form-group"><label>Apellido</label><input type="text" id="client-surname"></div>
+                <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:10px;">
+                    <h4>Historial</h4>
+                    <div style="max-height: 150px; overflow-y: auto;" id="client-history-list"></div>
+                    <button class="btn-add" style="margin-top:10px;" onclick="app.openAddServiceWindow()">+ Añadir Servicio/Nota</button>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="app.closeModal('client-modal')">Cerrar</button>
+                    <button class="btn btn-primary" onclick="app.saveClientChanges()">Guardar</button>
+                    <button class="btn btn-danger" onclick="app.deleteClient()">Eliminar Ficha</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="service-modal">
+            <div class="modal">
+                <h3>Nuevo Servicio / Nota</h3>
+                <div class="form-group"><label>Fecha</label><input type="date" id="service-date"></div>
+                <div class="form-group"><label>Observaciones</label><textarea id="service-obs" rows="3"></textarea></div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="app.closeModal('service-modal')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="app.saveServiceToClient()">Añadir</button>
+                </div>
+            </div>
+        </div>
 
     <div id="toast">Acción realizada</div>
 
@@ -439,6 +475,56 @@
             
             closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
             openModal: function(id) { document.getElementById(id).classList.add('open'); },
+            showSyncModal: function() { this.openModal('sync-modal'); },
+
+            /* --- SINCRONIZACIÓN (SIMPLIFICADA) --- */
+            showSyncModal: function() {
+                // 1. Generar el código y copiarlo al cargar la ventana
+                const json = JSON.stringify(this.data);
+                const textArea = document.getElementById('sync-data-display');
+                textArea.value = json;
+                this.openModal('sync-modal');
+            },
+
+            pasteSyncData: function() {
+                const input = document.getElementById('sync-data-input');
+                const jsonStr = input.value.trim();
+                if(!jsonStr) return;
+
+                try {
+                    const parsed = JSON.parse(jsonStr);
+                    
+                    // Verificación básica
+                    if(!parsed.appointments) {
+                        this.showToast("El archivo no es válido");
+                        return;
+                    }
+
+                    // Fusión de datos inteligente
+                    if(confirm("¿Sobreescribir TODOS los datos actuales con los del archivo? (Se borrarán las citas de la tablet)")) {
+                        this.data = { ...parsed }; // Reemplazamos los datos actuales
+                        this.saveData();
+                        this.refreshAll();
+                        this.showToast("Datos sincronizados correctamente");
+                        this.closeModal('sync-modal');
+                    } else {
+                        this.showToast("Cancelado.");
+                    }
+                } catch (e) {
+                    this.showToast("Error: Formato inválido");
+                }
+            },
+
+            refreshAll: function() {
+                this.renderDate(); this.renderGrid();
+                this.renderIncomes();
+                this.renderExpenses();
+                this.renderResults();
+                this.renderPurchases();
+                this.renderStock();
+                this.renderClients();
+                this.renderEstadisticas();
+            },
 
             /* --- COMPRAS --- */
             openPurchaseModal: function() {
@@ -512,12 +598,9 @@
                     }
                 }
             },
+            isDayClosed: function(dateStr) { return this.data.closedDays.includes(dateStr); },
 
-            isDayClosed: function(dateStr) {
-                return this.data.closedDays.includes(dateStr);
-            },
-
-            /* --- CITAS LÓGICA (SOLUCIÓN DEFINITIVA) --- */
+            /* --- CITAS LÓGICA --- */
             getFormattedDate: function(d) { return d.toISOString().split('T')[0]; },
             getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
             changeDay: function(delta) { this.data.currentDate.setDate(this.data.currentDate.getDate() + delta); this.renderDate(); this.renderGrid(); },
@@ -534,7 +617,6 @@
                 const currentStr = this.getFormattedDate(this.data.currentDate);
                 const daysApps = this.data.appointments.filter(a => a.dateStr === currentStr).sort((a,b) => this.timeToMins(a.time) - this.timeToMins(b.time));
 
-                // Comprobar si el día está cerrado
                 const isClosed = this.isDayClosed(currentStr);
                 const closeBtn = document.getElementById('btn-close-day');
                 
@@ -578,10 +660,10 @@
                                 return (currentMins > startM && currentMins < endM);
                             });
 
-                            // --- LÓGICA DE ASIGNACIÓN DE CLICS ---
-                            
+                            let appIdToHandle = null;
+
                             if (startApp) {
-                                // --- CASO 1: INICIO DE CITA ---
+                                appIdToHandle = startApp.id;
                                 slot.classList.add('occupied');
                                 if(startApp.status === 'closed') slot.classList.add('status-closed');
                                 
@@ -592,42 +674,21 @@
                                 block.className = `appointment-block ${statusClass}`;
                                 block.style.height = (startApp.duration * pxPerMin) + 'px';
                                 block.innerHTML = `<div class="app-client">${startApp.client}</div><div class="app-service">${startApp.service}</div>`;
-                                
-                                // ASIGNACIÓN DIRECTA AL BLOQUE
                                 block.onclick = (e) => { 
-                                    e.stopPropagation(); // Evitar que suba al slot
+                                    e.stopPropagation(); 
                                     this.openManageAppointment(startApp.id); 
                                 };
                                 
                                 slot.appendChild(block);
-                                // IMPORTANTE: No asignamos onclick al slot aquí, para que el bloque capture el evento.
-
+                                slot.style.pointerEvents = 'none'; 
                             } else if (activeApp) {
-                                // --- CASO 2: DURACIÓN DE CITA (ZONA FANTASMA) ---
                                 appIdToHandle = activeApp.id;
                                 slot.classList.add('occupied');
                                 if(activeApp.status === 'closed') slot.classList.add('status-closed');
-                                
-                                // ASIGNACIÓN DIRECTA AL SLOT (PARA PODER CLICAR DONDE NO HAY BLOQUE)
-                                slot.onclick = (e) => {
-                                    e.stopPropagation();
-                                    if(this.isDayClosed(currentStr)) {
-                                        this.showToast("El día está cerrado.");
-                                        return;
-                                    }
-                                    this.openManageAppointment(activeApp.id);
-                                };
-
+                                slot.onclick = (e) => this.handleSlotClick(e, time, col, appIdToHandle);
                             } else {
                                 // --- CASO 3: HUECO LIBRE ---
-                                slot.onclick = (e) => {
-                                    e.stopPropagation();
-                                    if(this.isDayClosed(currentStr)) {
-                                        this.showToast("El día está cerrado.");
-                                        return;
-                                    }
-                                    this.openCreateModal(timeStr, col);
-                                };
+                                slot.onclick = (e) => this.handleSlotClick(e, time, col, appIdToHandle);
                             }
 
                             grid.appendChild(slot);
@@ -781,6 +842,7 @@
                     list.appendChild(div);
                 });
                 if(sorted.length === 0) list.innerHTML = '<p style="color:#888; font-size:0.9rem;">Sin historial.</p>';
+';
             },
             openAddServiceWindow: function() {
                 const today = new Date().toISOString().split('T')[0];
@@ -884,14 +946,7 @@
                     const d = document.createElement('div');
                     d.className = `stock-item ${i.checked ? 'checked' : ''}`;
                     d.innerHTML = `
-                        <div class="stock-item-left">
-                            <input type="checkbox" ${i.checked?'checked':''} onchange="app.toggleStock(${i.id})">
-                            <span class="stock-text">${i.text}</span>
-                        </div>
-                        <div class="list-actions">
-                            <button onclick="app.deleteStock(${i.id})">Eliminar</button>
-                        </div>
-                    `;
+                        <input type="checkbox" ${i.checked?'checked':''} onchange="app.toggleStock(${i.id})"><span class="stock-text">${i.text}</span><button onclick="app.deleteStock(${i.id})">Eliminar</button>`;
                     c.appendChild(d);
                 });
             },
