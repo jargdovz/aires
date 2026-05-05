@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AiresGM v1.3</title>
+    <title>AiresGM v1.5 Cloud</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#D81B60">
@@ -171,13 +171,23 @@
         
         .ticket-sub-toggle { margin-bottom: 15px; display: flex; justify-content: center; gap: 10px; }
         .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        
+        .sync-status {
+            position: absolute; bottom: 60px; right: 20px; 
+            background: rgba(255,255,255,0.8); padding: 5px 10px; 
+            border-radius: 20px; font-size: 0.8rem; color: #666;
+            pointer-events: none; display: flex; align-items: center; gap: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+        .sync-dot.online { background: #5cb85c; box-shadow: 0 0 5px #5cb85c; }
 
     </style>
 </head>
 <body>
 
     <header>
-        <h1>AiresGM v1.3</h1>
+        <h1>AiresGM Cloud</h1>
         <div class="nav-header-container">
             <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
             <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
@@ -307,7 +317,6 @@
             
             <div id="tab-ticket" class="tab-content">
                 <h3>Ticket Medio</h3>
-                <!-- Nuevo Toggle para Ticket Medio -->
                 <div class="ticket-sub-toggle">
                     <button id="btn-ticket-week" class="toggle-btn active btn-sm" onclick="app.setTicketView('week', this)">Semana</button>
                     <button id="btn-ticket-month" class="toggle-btn btn-sm" onclick="app.setTicketView('month', this)">Mes</button>
@@ -330,6 +339,11 @@
         </section>
 
     </main>
+
+    <div class="sync-status" id="sync-status">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-text">Conectando...</span>
+    </div>
 
     <!-- MODAL CREAR CITA -->
     <div class="modal-overlay" id="create-modal">
@@ -430,13 +444,34 @@
 
     <div id="toast">Acción realizada</div>
 
-    <script>
+    <!-- FIREBASE SDK & APP LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // --- CONFIGURACIÓN DE FIREBASE ---
+        // Credenciales actualizadas
+        const firebaseConfig = {
+            apiKey: "AIzaSyBaDVVlgROTXKUkrpxgvg5vN-HiuaNu6Fs",
+            authDomain: "airesgm-v1.firebaseapp.com",
+            databaseURL: "https://airesgm-v1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "airesgm-v1",
+            storageBucket: "airesgm-v1.firebasestorage.app",
+            messagingSenderId: "947262540740",
+            appId: "1:947262540740:web:e708a99a4728fd4e2d3291"
+        };
+
+        // Inicializar Firebase
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getFirestore(firebaseApp);
+        const dbDocRef = doc(db, "salon_data", "main_config");
+
         const app = {
             data: {
                 currentDate: new Date(),
                 financeDate: new Date(),
                 isAnnualView: false,
-                ticketView: 'week', // Nuevo estado: 'week' o 'month'
+                ticketView: 'week',
                 appointments: [],
                 expenses: [],
                 purchases: [],
@@ -445,16 +480,77 @@
                 closedDays: [] 
             },
 
-            init: function() {
-                this.loadData();
+            init: async function() {
+                // 1. Cargar datos locales primero (para rapidez)
+                this.loadLocal();
+
+                // 2. Escuchar cambios en Firebase en tiempo real
+                this.startFirebaseListener();
+                
                 this.renderDate();
                 this.renderGrid();
                 document.getElementById('expense-date').value = this.getFormattedDate(new Date());
                 this.updateFinanceDisplays();
             },
 
-            saveData: function() { localStorage.setItem('airesgm_data', JSON.stringify(this.data)); },
-            loadData: function() {
+            startFirebaseListener: function() {
+                onSnapshot(dbDocRef, (docSnap) => {
+                    const statusEl = document.getElementById('sync-status');
+                    const dotEl = document.getElementById('sync-dot');
+                    const textEl = document.getElementById('sync-text');
+
+                    if (docSnap.exists()) {
+                        const cloudData = docSnap.data();
+                        // Fusionamos los datos: La nube tiene preferencia
+                        this.data = { ...this.data, ...cloudData };
+                        this.saveLocal(); // Guardar copia local actualizada
+                        
+                        statusEl.style.display = 'flex';
+                        dotEl.classList.add('online');
+                        textEl.innerText = "Sincronizado";
+                        
+                        // Refrescar UI si es necesario
+                        this.refreshCurrentSection();
+                    } else {
+                        // Si no existe en la nube, subimos lo que tenemos local
+                        this.syncToCloud();
+                    }
+                }, (error) => {
+                    console.error("Error Firebase:", error);
+                    document.getElementById('sync-text').innerText = "Sin conexión";
+                });
+            },
+
+            syncToCloud: function() {
+                setDoc(dbDocRef, this.data, { merge: true })
+                    .then(() => {
+                        document.getElementById('sync-text').innerText = "Guardado en nube";
+                        setTimeout(() => { document.getElementById('sync-text').innerText = "Sincronizado"; }, 2000);
+                    })
+                    .catch(e => console.error("Error subiendo:", e));
+            },
+
+            refreshCurrentSection: function() {
+                const id = document.querySelector('.section.active').id;
+                if(id === 'ingresos') this.renderIncomes();
+                if(id === 'gastos') this.renderExpenses();
+                if(id === 'resultados') this.renderResults();
+                if(id === 'estadisticas') this.renderEstadisticas();
+                if(id === 'clientes') this.renderClients();
+                if(id === 'citas') { this.renderDate(); this.renderGrid(); }
+                if(id === 'stock') this.renderStock();
+                if(id === 'compras') this.renderPurchases();
+            },
+
+            // --- GESTIÓN DE DATOS ---
+            saveData: function() { 
+                this.saveLocal(); 
+                this.syncToCloud(); 
+            },
+            
+            saveLocal: function() { localStorage.setItem('airesgm_data', JSON.stringify(this.data)); },
+            
+            loadLocal: function() {
                 const stored = localStorage.getItem('airesgm_data');
                 if (stored) {
                     const parsed = JSON.parse(stored);
@@ -464,7 +560,6 @@
                     this.data.stock = parsed.stock || [];
                     this.data.clients = parsed.clients || [];
                     this.data.closedDays = parsed.closedDays || [];
-                    // Migrar ticketView si existe version anterior
                     this.data.ticketView = parsed.ticketView || 'week';
                 }
             },
@@ -475,14 +570,7 @@
                 document.getElementById(id).classList.add('active');
                 document.querySelectorAll('.nav-btn-header').forEach(b => b.classList.remove('active'));
                 if(btnElement) btnElement.classList.add('active');
-                if(id === 'ingresos') this.renderIncomes();
-                if(id === 'gastos') this.renderExpenses();
-                if(id === 'resultados') this.renderResults();
-                if(id === 'compras') this.renderPurchases();
-                if(id === 'stock') this.renderStock();
-                if(id === 'citas') { this.renderDate(); this.renderGrid(); }
-                if(id === 'estadisticas') this.renderEstadisticas();
-                if(id === 'clientes') this.renderClients();
+                this.refreshCurrentSection();
             },
             
             closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
@@ -508,10 +596,7 @@
             changeFinanceMonth: function(delta) {
                 this.data.financeDate.setMonth(this.data.financeDate.getMonth() + delta);
                 this.updateFinanceDisplays();
-                const activeSection = document.querySelector('.section.active').id;
-                if(activeSection === 'ingresos') this.renderIncomes();
-                if(activeSection === 'gastos') this.renderExpenses();
-                if(activeSection === 'resultados') this.renderResults();
+                this.refreshCurrentSection();
             },
 
             updateFinanceDisplays: function() {
@@ -953,7 +1038,6 @@
                 const apps = this.data.appointments;
                 const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-                // Helper para crear barras HTML
                 const createBarRow = (label, value, max, color = 'var(--primary-magenta)') => {
                     const pct = max > 0 ? (value / max) * 100 : 0;
                     return `<div class="chart-row">
@@ -965,13 +1049,11 @@
                     </div>`;
                 };
 
-                // 1. SERVICIOS (Volumen)
                 if (apps.length === 0) return;
+                
+                // 1. SERVICIOS
                 const serviceCounts = {};
-                apps.forEach(a => { 
-                    const s = (a.service || "Sin definir").trim(); 
-                    serviceCounts[s] = (serviceCounts[s] || 0) + 1; 
-                });
+                apps.forEach(a => { const s = (a.service || "Sin definir").trim(); serviceCounts[s] = (serviceCounts[s] || 0) + 1; });
                 const sortedServices = Object.entries(serviceCounts).sort((a,b) => b[1] - a[1]);
                 const maxServ = sortedServices[0][1];
                 let htmlServices = "";
@@ -980,13 +1062,9 @@
                 });
                 document.getElementById('chart-services').innerHTML = htmlServices;
 
-                // 2. DÍA SEMANA (Distribución de Citas)
+                // 2. DÍA SEMANA (Citas)
                 const weekCounts = [0,0,0,0,0,0,0];
-                apps.forEach(a => {
-                    const d = new Date(a.dateStr);
-                    const dayIndex = d.getDay();
-                    weekCounts[dayIndex]++;
-                });
+                apps.forEach(a => { const d = new Date(a.dateStr); weekCounts[d.getDay()]++; });
                 const maxWeekCount = Math.max(...weekCounts) || 1;
                 let htmlWeekDist = "";
                 weekCounts.forEach((count, index) => {
@@ -994,7 +1072,7 @@
                 });
                 document.getElementById('chart-week-dist').innerHTML = htmlWeekDist;
 
-                // 3. COMPARATIVA (Ingresos Mensuales)
+                // 3. COMPARATIVA (Ingresos)
                 const monthlyIncome = {};
                 apps.filter(a => a.status === 'closed').forEach(a => {
                     const monthKey = a.dateStr.substring(0, 7);
@@ -1006,13 +1084,12 @@
                 sortedMonths.forEach(([month, income]) => {
                     htmlComp += createBarRow(month, income.toFixed(0) + '€', maxMonthIncome);
                 });
-                document.getElementById('chart-month-phases').innerHTML = htmlComp || "<p>No hay datos de ingresos cerrados.</p>";
+                document.getElementById('chart-month-phases').innerHTML = htmlComp || "<p>No hay datos.</p>";
 
-                // 4. FACT/DÍA (Ingresos por Día de la Semana)
+                // 4. FACT/DÍA (Ingresos por Día Semana)
                 const weekIncome = [0,0,0,0,0,0,0];
                 apps.filter(a => a.status === 'closed').forEach(a => {
-                    const dayIndex = new Date(a.dateStr).getDay();
-                    weekIncome[dayIndex] += a.price;
+                    weekIncome[new Date(a.dateStr).getDay()] += a.price;
                 });
                 const maxWeekIncome = Math.max(...weekIncome) || 1;
                 let htmlRevWeek = "";
@@ -1021,7 +1098,7 @@
                 });
                 document.getElementById('chart-rev-week').innerHTML = htmlRevWeek;
 
-                // 5. FACT/MES (Ingresos por Día del Mes 1-31)
+                // 5. FACT/MES (Día 1-31)
                 const dayOfMonthIncome = {};
                 apps.filter(a => a.status === 'closed').forEach(a => {
                     const dayNum = a.dateStr.split('-')[2];
@@ -1032,12 +1109,11 @@
                 Object.keys(dayOfMonthIncome).sort((a,b) => a - b).forEach(day => {
                     htmlRevMonth += createBarRow(`Dia ${day}`, dayOfMonthIncome[day].toFixed(0) + '€', maxDOMIncome, 'var(--success)');
                 });
-                document.getElementById('chart-rev-month').innerHTML = htmlRevMonth || "<p>No hay datos por día.</p>";
+                document.getElementById('chart-rev-month').innerHTML = htmlRevMonth || "<p>No hay datos.</p>";
 
-                // 6. TICKET MEDIO (Week OR Month)
+                // 6. TICKET MEDIO
                 let htmlTicket = "";
                 if (this.data.ticketView === 'week') {
-                    // Por día de la semana
                     const weekStats = dayNames.map(() => ({ total: 0, count: 0 }));
                     apps.filter(a => a.status === 'closed').forEach(a => {
                         const idx = new Date(a.dateStr).getDay();
@@ -1050,7 +1126,6 @@
                         htmlTicket += createBarRow(dayNames[idx], avg + '€', maxTicket, 'var(--text-blue)');
                     });
                 } else {
-                    // Por Mes
                     const monthlyStats = {};
                     apps.filter(a => a.status === 'closed').forEach(a => {
                         const m = a.dateStr.substring(0, 7);
@@ -1076,6 +1151,8 @@
             }
         };
 
+        // Exponer app al window para poder llamarlo desde HTML (onclicks)
+        window.app = app;
         document.addEventListener('DOMContentLoaded', () => { app.init(); });
     </script>
 </body>
