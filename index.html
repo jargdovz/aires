@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AiresGM v1.5 Cloud</title>
+    <title>AiresGM v1</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#D81B60">
@@ -79,8 +79,6 @@
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-secondary { background: #757575; }
-        .btn-outline { background: transparent; border: 2px solid var(--text-blue); color: var(--text-blue); width: auto; display:inline-block; padding: 8px 15px; }
-        .btn-outline.active { background: var(--text-blue); color: var(--white); }
         .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
 
         .btn-add { background-color: var(--primary-magenta); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; width: auto; display:inline-block;}
@@ -94,7 +92,6 @@
         /* --- GRID DE CITAS --- */
         .date-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--white); padding: 10px; border-radius: var(--radius); }
         .date-nav button { background: var(--primary-magenta); color: var(--white); border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
-        .date-nav span { font-weight: bold; color: var(--text-blue); }
         
         .agenda-container { display: grid; grid-template-columns: 50px repeat(3, 1fr); gap: 2px; overflow-x: auto; padding-bottom: 20px; }
         .time-label { text-align: right; padding-right: 5px; font-size: 0.8rem; color: #555; height: 40px; display: flex; align-items: center; justify-content: flex-end; }
@@ -110,12 +107,14 @@
             border-color: transparent;
         }
         
+        /* Bloque de cita visible */
         .appointment-block { 
             position: absolute; top: 0; left: 1px; right: 1px; border-radius: 4px; padding: 4px; font-size: 0.8rem; 
             overflow: hidden; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
             display: flex; flex-direction: column; justify-content: center;
+            /* IMPORTANTE: Permitir interacción */
             pointer-events: auto;
-            font-weight: bold;
+            font-weight: bold; /* Fuente negrita */
         }
 
         .appointment-block.status-pending { background-color: #FFEB3B; color: #212121; border: 1px solid #FBC02D; }
@@ -143,10 +142,10 @@
         .tab-btn.active { background: var(--primary-magenta); color: var(--white); border-color: var(--primary-magenta); }
         .tab-content { display: none; } .tab-content.active { display: block; }
         .chart-row { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.9rem; }
-        .chart-label { width: 80px; text-align: right; margin-right: 10px; font-weight: bold; font-size: 0.8rem;}
+        .chart-label { width: 80px; text-align: right; margin-right: 10px; font-weight: bold; }
         .chart-bar-container { flex: 1; background: #eee; height: 20px; border-radius: 10px; overflow: hidden; position: relative; }
         .chart-bar { height: 100%; background: var(--primary-magenta); width: 0%; transition: width 1s ease; }
-        .chart-value { margin-left: 10px; font-size: 0.8rem; width: 45px; text-align: right;}
+        .chart-value { margin-left: 10px; font-size: 0.85rem; width: 50px; }
         
         /* --- MODAL --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s; }
@@ -162,32 +161,12 @@
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: var(--text-blue); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 3000; }
         #toast.show { opacity: 1; }
 
-        .toggle-container { text-align: center; margin-bottom: 15px; }
-        .toggle-btn { 
-            background: white; border: 2px solid var(--text-blue); color: var(--text-blue); 
-            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer;
-        }
-        .toggle-btn.active { background: var(--text-blue); color: white; }
-        
-        .ticket-sub-toggle { margin-bottom: 15px; display: flex; justify-content: center; gap: 10px; }
-        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
-        
-        .sync-status {
-            position: absolute; bottom: 60px; right: 20px; 
-            background: rgba(255,255,255,0.8); padding: 5px 10px; 
-            border-radius: 20px; font-size: 0.8rem; color: #666;
-            pointer-events: none; display: flex; align-items: center; gap: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
-        .sync-dot.online { background: #5cb85c; box-shadow: 0 0 5px #5cb85c; }
-
     </style>
 </head>
 <body>
 
     <header>
-        <h1>AiresGM Cloud</h1>
+        <h1>AiresGM v1</h1>
         <div class="nav-header-container">
             <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
             <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
@@ -218,29 +197,17 @@
         <!-- SECCIÓN 2: INGRESOS -->
         <section id="ingresos" class="section">
             <h2>Ingresos</h2>
-            <div class="date-nav">
-                <button onclick="app.changeFinanceMonth(-1)">&#10094;</button>
-                <span id="income-date-display">Mes Actual</span>
-                <button onclick="app.changeFinanceMonth(1)">&#10095;</button>
-            </div>
-
             <div class="summary-card">
-                <small>Total Ingresos (Mes)</small>
+                <small>Total Ingresos</small>
                 <div class="total-amount" id="total-income">0.00 €</div>
             </div>
-            <h3>Historial (Sólo cerradas)</h3>
+            <h3>Historial</h3>
             <ul class="list-group" id="income-list"></ul>
         </section>
 
         <!-- SECCIÓN 3: GASTOS -->
         <section id="gastos" class="section">
             <h2>Gastos</h2>
-            <div class="date-nav">
-                <button onclick="app.changeFinanceMonth(-1)">&#10094;</button>
-                <span id="expense-date-display">Mes Actual</span>
-                <button onclick="app.changeFinanceMonth(1)">&#10095;</button>
-            </div>
-
             <div class="quick-form">
                 <input type="number" id="expense-amount" placeholder="€">
                 <input type="text" id="expense-concept" placeholder="Concepto">
@@ -248,7 +215,7 @@
                 <button class="btn-add" onclick="app.addExpense()">Añadir</button>
             </div>
             <div class="summary-card">
-                <small>Total Gastos (Mes)</small>
+                <small>Total Gastos</small>
                 <div class="total-amount" style="color:var(--danger)" id="total-expenses">0.00 €</div>
             </div>
             <ul class="list-group" id="expense-list"></ul>
@@ -257,26 +224,12 @@
         <!-- SECCIÓN 4: RESULTADOS -->
         <section id="resultados" class="section">
             <h2>Resultados</h2>
-            
-            <div class="toggle-container">
-                <button id="btn-toggle-year" class="toggle-btn" onclick="app.toggleAnnualView()">Ver Anual</button>
-            </div>
-
-            <div class="date-nav" id="results-date-nav">
-                <button onclick="app.changeFinanceMonth(-1)">&#10094;</button>
-                <span id="results-date-display">Mes Actual</span>
-                <button onclick="app.changeFinanceMonth(1)">&#10095;</button>
-            </div>
-            <div class="date-nav" id="results-year-nav" style="display:none;">
-                <span style="flex:1; text-align:center;">Año <span id="results-year-display">2024</span></span>
-            </div>
-
             <div class="summary-card">
                 <p>Ingresos: <span id="res-income">0.00 €</span></p>
                 <p>Gastos: <span id="res-expenses">0.00 €</span></p>
             </div>
             <div id="result-box" class="result-box pos">0.00 €</div>
-            <p style="text-align:center; margin-top:10px; font-size:0.9rem;" id="result-label">Balance del Mes</p>
+            <p style="text-align:center; margin-top:10px; font-size:0.9rem;">Balance Total</p>
         </section>
 
         <!-- SECCIÓN 5: COMPRAS -->
@@ -284,7 +237,9 @@
             <h2>Gestión de Compras</h2>
             <button class="btn-add" onclick="app.openPurchaseModal()">+ Nueva Compra</button>
             <div style="margin-top: 20px;">
-                <ul class="list-group" id="purchase-list"></ul>
+                <ul class="list-group" id="purchase-list">
+                    <!-- Lista de compras -->
+                </ul>
             </div>
         </section>
 
@@ -310,19 +265,11 @@
                 <button class="tab-btn" onclick="app.switchTab('tab-ticket')">Ticket Medio</button>
             </div>
             <div id="tab-servicios" class="tab-content active"><h3>Servicios más solicitados</h3><div id="chart-services"></div></div>
-            <div id="tab-dia-sem" class="tab-content"><h3>Citas por Día de la Semana</h3><div id="chart-week-dist"></div></div>
-            <div id="tab-comparativa" class="tab-content"><h3>Ingresos Mensuales</h3><div id="chart-month-phases"></div></div>
-            <div id="tab-fact-dia" class="tab-content"><h3>Ingresos por Día de la Semana (€)</h3><div id="chart-rev-week"></div></div>
-            <div id="tab-fact-mes" class="tab-content"><h3>Ingresos por Día del Mes (1-31) (€)</h3><div id="chart-rev-month"></div></div>
-            
-            <div id="tab-ticket" class="tab-content">
-                <h3>Ticket Medio</h3>
-                <div class="ticket-sub-toggle">
-                    <button id="btn-ticket-week" class="toggle-btn active btn-sm" onclick="app.setTicketView('week', this)">Semana</button>
-                    <button id="btn-ticket-month" class="toggle-btn btn-sm" onclick="app.setTicketView('month', this)">Mes</button>
-                </div>
-                <div id="chart-ticket-week"></div>
-            </div>
+            <div id="tab-dia-sem" class="tab-content"><h3>Distribución por Día (Top 3)</h3><div id="chart-week-dist"></div></div>
+            <div id="tab-comparativa" class="tab-content"><h3>Comparativa Mensual</h3><div id="chart-month-phases"></div></div>
+            <div id="tab-fact-dia" class="tab-content"><h3>Ingresos por Día de la Semana</h3><div id="chart-rev-week" class="grid-bars"></div></div>
+            <div id="tab-fact-mes" class="tab-content"><h3>Ingresos por Día del Mes (1-31)</h3><div id="chart-rev-month" class="grid-bars"></div></div>
+            <div id="tab-ticket" class="tab-content"><h3>Ticket Medio por Día de la Semana</h3><div id="chart-ticket-week"></div></div>
         </section>
 
         <!-- SECCIÓN 8: CLIENTES -->
@@ -339,11 +286,6 @@
         </section>
 
     </main>
-
-    <div class="sync-status" id="sync-status">
-        <div class="sync-dot" id="sync-dot"></div>
-        <span id="sync-text">Conectando...</span>
-    </div>
 
     <!-- MODAL CREAR CITA -->
     <div class="modal-overlay" id="create-modal">
@@ -444,34 +386,10 @@
 
     <div id="toast">Acción realizada</div>
 
-    <!-- FIREBASE SDK & APP LOGIC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-        // --- CONFIGURACIÓN DE FIREBASE ---
-        // Credenciales actualizadas
-        const firebaseConfig = {
-            apiKey: "AIzaSyBaDVVlgROTXKUkrpxgvg5vN-HiuaNu6Fs",
-            authDomain: "airesgm-v1.firebaseapp.com",
-            databaseURL: "https://airesgm-v1-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "airesgm-v1",
-            storageBucket: "airesgm-v1.firebasestorage.app",
-            messagingSenderId: "947262540740",
-            appId: "1:947262540740:web:e708a99a4728fd4e2d3291"
-        };
-
-        // Inicializar Firebase
-        const firebaseApp = initializeApp(firebaseConfig);
-        const db = getFirestore(firebaseApp);
-        const dbDocRef = doc(db, "salon_data", "main_config");
-
+    <script>
         const app = {
             data: {
                 currentDate: new Date(),
-                financeDate: new Date(),
-                isAnnualView: false,
-                ticketView: 'week',
                 appointments: [],
                 expenses: [],
                 purchases: [],
@@ -480,77 +398,15 @@
                 closedDays: [] 
             },
 
-            init: async function() {
-                // 1. Cargar datos locales primero (para rapidez)
-                this.loadLocal();
-
-                // 2. Escuchar cambios en Firebase en tiempo real
-                this.startFirebaseListener();
-                
+            init: function() {
+                this.loadData();
                 this.renderDate();
                 this.renderGrid();
                 document.getElementById('expense-date').value = this.getFormattedDate(new Date());
-                this.updateFinanceDisplays();
             },
 
-            startFirebaseListener: function() {
-                onSnapshot(dbDocRef, (docSnap) => {
-                    const statusEl = document.getElementById('sync-status');
-                    const dotEl = document.getElementById('sync-dot');
-                    const textEl = document.getElementById('sync-text');
-
-                    if (docSnap.exists()) {
-                        const cloudData = docSnap.data();
-                        // Fusionamos los datos: La nube tiene preferencia
-                        this.data = { ...this.data, ...cloudData };
-                        this.saveLocal(); // Guardar copia local actualizada
-                        
-                        statusEl.style.display = 'flex';
-                        dotEl.classList.add('online');
-                        textEl.innerText = "Sincronizado";
-                        
-                        // Refrescar UI si es necesario
-                        this.refreshCurrentSection();
-                    } else {
-                        // Si no existe en la nube, subimos lo que tenemos local
-                        this.syncToCloud();
-                    }
-                }, (error) => {
-                    console.error("Error Firebase:", error);
-                    document.getElementById('sync-text').innerText = "Sin conexión";
-                });
-            },
-
-            syncToCloud: function() {
-                setDoc(dbDocRef, this.data, { merge: true })
-                    .then(() => {
-                        document.getElementById('sync-text').innerText = "Guardado en nube";
-                        setTimeout(() => { document.getElementById('sync-text').innerText = "Sincronizado"; }, 2000);
-                    })
-                    .catch(e => console.error("Error subiendo:", e));
-            },
-
-            refreshCurrentSection: function() {
-                const id = document.querySelector('.section.active').id;
-                if(id === 'ingresos') this.renderIncomes();
-                if(id === 'gastos') this.renderExpenses();
-                if(id === 'resultados') this.renderResults();
-                if(id === 'estadisticas') this.renderEstadisticas();
-                if(id === 'clientes') this.renderClients();
-                if(id === 'citas') { this.renderDate(); this.renderGrid(); }
-                if(id === 'stock') this.renderStock();
-                if(id === 'compras') this.renderPurchases();
-            },
-
-            // --- GESTIÓN DE DATOS ---
-            saveData: function() { 
-                this.saveLocal(); 
-                this.syncToCloud(); 
-            },
-            
-            saveLocal: function() { localStorage.setItem('airesgm_data', JSON.stringify(this.data)); },
-            
-            loadLocal: function() {
+            saveData: function() { localStorage.setItem('airesgm_data', JSON.stringify(this.data)); },
+            loadData: function() {
                 const stored = localStorage.getItem('airesgm_data');
                 if (stored) {
                     const parsed = JSON.parse(stored);
@@ -560,7 +416,6 @@
                     this.data.stock = parsed.stock || [];
                     this.data.clients = parsed.clients || [];
                     this.data.closedDays = parsed.closedDays || [];
-                    this.data.ticketView = parsed.ticketView || 'week';
                 }
             },
 
@@ -570,46 +425,18 @@
                 document.getElementById(id).classList.add('active');
                 document.querySelectorAll('.nav-btn-header').forEach(b => b.classList.remove('active'));
                 if(btnElement) btnElement.classList.add('active');
-                this.refreshCurrentSection();
+                if(id === 'ingresos') this.renderIncomes();
+                if(id === 'gastos') this.renderExpenses();
+                if(id === 'resultados') this.renderResults();
+                if(id === 'compras') this.renderPurchases();
+                if(id === 'stock') this.renderStock();
+                if(id === 'citas') { this.renderDate(); this.renderGrid(); }
+                if(id === 'estadisticas') this.renderEstadisticas();
+                if(id === 'clientes') this.renderClients();
             },
             
             closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
             openModal: function(id) { document.getElementById(id).classList.add('open'); },
-
-            /* --- AYUDAS PARA FECHAS Y FILTROS --- */
-            getFormattedDate: function(d) { 
-                const year = d.getFullYear();
-                const month = (d.getMonth() + 1).toString().padStart(2, '0');
-                const day = d.getDate().toString().padStart(2, '0');
-                return `${year}-${month}-${day}`; 
-            },
-            
-            getFormattedMonth: function(d) {
-                const year = d.getFullYear();
-                const month = (d.getMonth() + 1).toString().padStart(2, '0');
-                return `${year}-${month}`; 
-            },
-
-            getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
-            getDisplayMonthYear: function(d) { return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); },
-
-            changeFinanceMonth: function(delta) {
-                this.data.financeDate.setMonth(this.data.financeDate.getMonth() + delta);
-                this.updateFinanceDisplays();
-                this.refreshCurrentSection();
-            },
-
-            updateFinanceDisplays: function() {
-                const txt = this.getDisplayMonthYear(this.data.financeDate).charAt(0).toUpperCase() + this.getDisplayMonthYear(this.data.financeDate).slice(1);
-                const incomeDisplay = document.getElementById('income-date-display');
-                const expenseDisplay = document.getElementById('expense-date-display');
-                const resultsDisplay = document.getElementById('results-date-display');
-                
-                if(incomeDisplay) incomeDisplay.innerText = txt;
-                if(expenseDisplay) expenseDisplay.innerText = txt;
-                if(resultsDisplay) resultsDisplay.innerText = txt;
-                document.getElementById('results-year-display').innerText = this.data.financeDate.getFullYear();
-            },
 
             /* --- COMPRAS --- */
             openPurchaseModal: function() {
@@ -625,24 +452,49 @@
                 const place = document.getElementById('purchase-place').value;
                 const cost = parseFloat(document.getElementById('purchase-cost').value) ||0;
                 const items = document.getElementById('purchase-items').value;
+
                 if(!place || !items) return this.showToast("Rellena lugar y productos");
-                this.data.purchases.push({ id: Date.now(), date: date, place: place, cost: cost, items: items });
-                this.saveData(); this.closeModal('purchase-modal'); this.renderPurchases(); this.showToast("Compra guardada");
+
+                this.data.purchases.push({
+                    id: Date.now(),
+                    date: date,
+                    place: place,
+                    cost: cost,
+                    items: items
+                });
+                this.saveData();
+                this.closeModal('purchase-modal');
+                this.renderPurchases();
+                this.showToast("Compra guardada");
             },
             renderPurchases: function() {
-                const list = document.getElementById('purchase-list'); list.innerHTML = '';
+                const list = document.getElementById('purchase-list');
+                list.innerHTML = '';
                 const sorted = [...this.data.purchases].sort((a,b) => new Date(b.date) - new Date(a.date));
+                
                 sorted.forEach(p => {
                     const li = document.createElement('li');
                     li.className = 'list-item';
-                    li.innerHTML = `<div><strong>${p.date}</strong> - ${p.place}<br><small>${p.items}</small></div><div style="display:flex;align-items:center;"><span>${p.cost.toFixed(2)} €</span><div class="list-actions"><button onclick="app.deletePurchase(${p.id})">Eliminar</button></div></div>`;
+                    li.innerHTML = `
+                        <div>
+                            <strong>${p.date}</strong> - ${p.place}<br>
+                            <small>${p.items}</small>
+                        </div>
+                        <div style="display:flex;align-items:center;">
+                            <span>${p.cost.toFixed(2)} €</span>
+                            <div class="list-actions">
+                                <button onclick="app.deletePurchase(${p.id})">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
                     list.appendChild(li);
                 });
             },
             deletePurchase: function(id) {
                 if(confirm("¿Borrar esta compra?")) {
                     this.data.purchases = this.data.purchases.filter(p => p.id !== id);
-                    this.saveData(); this.renderPurchases();
+                    this.saveData();
+                    this.renderPurchases();
                 }
             },
 
@@ -658,40 +510,51 @@
                     }
                 }
             },
-            isDayClosed: function(dateStr) { return this.data.closedDays.includes(dateStr); },
 
-            /* --- CITAS LÓGICA --- */
+            isDayClosed: function(dateStr) {
+                return this.data.closedDays.includes(dateStr);
+            },
+
+            /* --- CITAS LÓGICA (SOLUCIÓN DEFINITIVA) --- */
+            getFormattedDate: function(d) { return d.toISOString().split('T')[0]; },
+            getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
+            changeDay: function(delta) { this.data.currentDate.setDate(this.data.currentDate.getDate() + delta); this.renderDate(); this.renderGrid(); },
+            renderDate: function() { const d = this.getDisplayDate(this.data.currentDate); document.getElementById('current-date-display').innerText = d.charAt(0).toUpperCase() + d.slice(1); },
+            
             timeToMins: function(timeStr) {
                 const [h, m] = timeStr.split(':').map(Number);
                 return h * 60 + m;
             },
-            changeDay: function(delta) { this.data.currentDate.setDate(this.data.currentDate.getDate() + delta); this.renderDate(); this.renderGrid(); },
-            renderDate: function() { const d = this.getDisplayDate(this.data.currentDate); document.getElementById('current-date-display').innerText = d.charAt(0).toUpperCase() + d.slice(1); },
-            
+
             renderGrid: function() {
                 const grid = document.getElementById('agenda-grid');
                 grid.innerHTML = '';
                 const currentStr = this.getFormattedDate(this.data.currentDate);
                 const daysApps = this.data.appointments.filter(a => a.dateStr === currentStr).sort((a,b) => this.timeToMins(a.time) - this.timeToMins(b.time));
 
+                // Comprobar si el día está cerrado
                 const isClosed = this.isDayClosed(currentStr);
                 const closeBtn = document.getElementById('btn-close-day');
                 
                 if(isClosed) {
                     closeBtn.innerText = "Día Cerrado";
                     closeBtn.disabled = true;
-                    closeBtn.classList.remove('btn-success'); closeBtn.classList.add('btn-secondary');
+                    closeBtn.classList.remove('btn-success');
+                    closeBtn.classList.add('btn-secondary');
                 } else {
                     closeBtn.innerText = "Cerrar Día";
                     closeBtn.disabled = false;
-                    closeBtn.classList.add('btn-success'); closeBtn.classList.remove('btn-secondary');
+                    closeBtn.classList.add('btn-success');
+                    closeBtn.classList.remove('btn-secondary');
                 }
 
+                // Loop hasta las 19
                 for (let h = 9; h <= 19; h++) {
                     for (let m = 0; m < 60; m += 15) {
                         const timeStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
                         const currentMins = this.timeToMins(timeStr);
                         
+                        // Etiqueta de hora
                         const timeCell = document.createElement('div');
                         timeCell.className = 'time-label';
                         timeCell.innerText = timeStr;
@@ -702,7 +565,10 @@
                             slot.className = 'slot';
                             if(isClosed) slot.classList.add('day-closed');
                             
+                            // Verificar si hay una cita EMPEZANDO en este slot
                             const startApp = daysApps.find(a => a.time === timeStr && a.col == col);
+                            
+                            // Verificar si este slot está OCUPADO por una cita anterior (duración)
                             const activeApp = daysApps.find(a => {
                                 if (a.col !== col) return false;
                                 const startM = this.timeToMins(a.time);
@@ -710,33 +576,58 @@
                                 return (currentMins > startM && currentMins < endM);
                             });
 
+                            // --- LÓGICA DE ASIGNACIÓN DE CLICS ---
+                            
                             if (startApp) {
+                                // --- CASO 1: INICIO DE CITA ---
                                 slot.classList.add('occupied');
                                 if(startApp.status === 'closed') slot.classList.add('status-closed');
+                                
                                 const pxPerMin = 40 / 15;
                                 const statusClass = startApp.status === 'closed' ? 'status-closed' : 'status-pending';
+                                
                                 const block = document.createElement('div');
                                 block.className = `appointment-block ${statusClass}`;
                                 block.style.height = (startApp.duration * pxPerMin) + 'px';
                                 block.innerHTML = `<div class="app-client">${startApp.client}</div><div class="app-service">${startApp.service}</div>`;
-                                block.onclick = (e) => { e.stopPropagation(); this.openManageAppointment(startApp.id); };
+                                
+                                // ASIGNACIÓN DIRECTA AL BLOQUE
+                                block.onclick = (e) => { 
+                                    e.stopPropagation(); // Evitar que suba al slot
+                                    this.openManageAppointment(startApp.id); 
+                                };
+                                
                                 slot.appendChild(block);
+                                // IMPORTANTE: No asignamos onclick al slot aquí, para que el bloque capture el evento.
+
                             } else if (activeApp) {
+                                // --- CASO 2: DURACIÓN DE CITA (ZONA FANTASMA) ---
                                 appIdToHandle = activeApp.id;
                                 slot.classList.add('occupied');
                                 if(activeApp.status === 'closed') slot.classList.add('status-closed');
+                                
+                                // ASIGNACIÓN DIRECTA AL SLOT (PARA PODER CLICAR DONDE NO HAY BLOQUE)
                                 slot.onclick = (e) => {
                                     e.stopPropagation();
-                                    if(this.isDayClosed(currentStr)) { this.showToast("El día está cerrado."); return; }
+                                    if(this.isDayClosed(currentStr)) {
+                                        this.showToast("El día está cerrado.");
+                                        return;
+                                    }
                                     this.openManageAppointment(activeApp.id);
                                 };
+
                             } else {
+                                // --- CASO 3: HUECO LIBRE ---
                                 slot.onclick = (e) => {
                                     e.stopPropagation();
-                                    if(this.isDayClosed(currentStr)) { this.showToast("El día está cerrado."); return; }
+                                    if(this.isDayClosed(currentStr)) {
+                                        this.showToast("El día está cerrado.");
+                                        return;
+                                    }
                                     this.openCreateModal(timeStr, col);
                                 };
                             }
+
                             grid.appendChild(slot);
                         }
                     }
@@ -744,6 +635,8 @@
             },
 
             /* --- GESTIÓN DE MODALES --- */
+            
+            // CREAR
             openCreateModal: function(time, col) {
                 document.getElementById('create-time').value = time;
                 document.getElementById('create-col').value = col;
@@ -763,7 +656,9 @@
                 const srv = document.getElementById('create-service').value;
                 const prc = parseFloat(document.getElementById('create-price').value) || 0;
                 const obs = document.getElementById('create-obs').value;
+
                 if(!cli) return this.showToast("Falta nombre");
+
                 this.data.appointments.push({
                     id: Date.now(), dateStr: this.getFormattedDate(this.data.currentDate),
                     time: time, col: col, duration: dur, 
@@ -772,6 +667,7 @@
                 this.saveData(); this.closeModal('create-modal'); this.renderGrid(); this.showToast("Cita creada");
             },
 
+            // GESTIONAR (EDITAR)
             openManageAppointment: function(id) {
                 const appData = this.data.appointments.find(a => a.id === id);
                 if(!appData) return;
@@ -830,8 +726,9 @@
                 const search = document.getElementById('client-search').value.toLowerCase();
                 list.innerHTML = '';
                 const filtered = this.data.clients.filter(c => (c.name + ' ' + c.surname).toLowerCase().includes(search));
-                if (filtered.length === 0) { document.getElementById('no-clients-msg').style.display = 'block'; }
-                else {
+                if (filtered.length === 0) {
+                    document.getElementById('no-clients-msg').style.display = 'block';
+                } else {
                     document.getElementById('no-clients-msg').style.display = 'none';
                     filtered.forEach(c => {
                         const li = document.createElement('li');
@@ -872,7 +769,8 @@
                 }
             },
             renderClientHistory: function(history) {
-                const list = document.getElementById('client-history-list'); list.innerHTML = '';
+                const list = document.getElementById('client-history-list');
+                list.innerHTML = '';
                 const sorted = [...history].sort((a,b) => new Date(b.date) - new Date(a.date));
                 sorted.forEach(h => {
                     const div = document.createElement('div');
@@ -905,8 +803,13 @@
                 const amt = parseFloat(document.getElementById('expense-amount').value);
                 const con = document.getElementById('expense-concept').value;
                 const dateStr = document.getElementById('expense-date').value;
+                
                 if(!amt || !con) return this.showToast("Rellena campos");
-                if(this.isDayClosed(dateStr)) return this.showToast("No se pueden añadir gastos a un día cerrado.");
+                
+                if(this.isDayClosed(dateStr)) {
+                    return this.showToast("No se pueden añadir gastos a un día cerrado.");
+                }
+
                 this.data.expenses.push({ id: Date.now(), amount: amt, concept: con, date: dateStr });
                 document.getElementById('expense-amount').value = ''; document.getElementById('expense-concept').value = '';
                 this.saveData(); this.renderExpenses(); this.showToast("Gasto añadido");
@@ -914,27 +817,27 @@
             renderExpenses: function() {
                 const list = document.getElementById('expense-list'); list.innerHTML = '';
                 let tot = 0;
-                const targetMonth = this.getFormattedMonth(this.data.financeDate);
                 [...this.data.expenses].sort((a,b)=>b.id-a.id).forEach(e => {
-                    if(e.date.startsWith(targetMonth)) {
-                        tot += e.amount;
-                        const li = document.createElement('li');
-                        li.className = 'list-item';
-                        li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div>`;
-                        list.appendChild(li);
-                    }
+                    tot += e.amount;
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div>`;
+                    list.appendChild(li);
                 });
                 document.getElementById('total-expenses').innerText = tot.toFixed(2) + ' €';
             },
-            deleteExpense: function(id) { this.data.expenses = this.data.expenses.filter(e => e.id !== id); this.saveData(); this.renderExpenses(); },
+            deleteExpense: function(id) { 
+                this.data.expenses = this.data.expenses.filter(e => e.id !== id); 
+                this.saveData(); 
+                this.renderExpenses(); 
+            },
 
             /* --- INGRESOS --- */
             renderIncomes: function() {
                 const list = document.getElementById('income-list'); list.innerHTML = '';
                 let tot = 0;
-                const targetMonth = this.getFormattedMonth(this.data.financeDate);
                 [...this.data.appointments].sort((a,b)=>b.id-a.id).forEach(a => {
-                    if(a.price > 0 && a.status === 'closed' && a.dateStr.startsWith(targetMonth)) {
+                    if(a.price > 0) {
                         tot += a.price;
                         const li = document.createElement('li');
                         li.className = 'list-item';
@@ -946,36 +849,9 @@
             },
 
             /* --- RESULTADOS --- */
-            toggleAnnualView: function() {
-                this.data.isAnnualView = !this.data.isAnnualView;
-                const btn = document.getElementById('btn-toggle-year');
-                const monthNav = document.getElementById('results-date-nav');
-                const yearNav = document.getElementById('results-year-nav');
-                const label = document.getElementById('result-label');
-
-                if(this.data.isAnnualView) {
-                    btn.classList.add('active'); btn.innerText = "Ver Mensual";
-                    monthNav.style.display = 'none'; yearNav.style.display = 'flex';
-                    label.innerText = "Balance Anual Acumulado";
-                } else {
-                    btn.classList.remove('active'); btn.innerText = "Ver Anual";
-                    monthNav.style.display = 'flex'; yearNav.style.display = 'none';
-                    label.innerText = "Balance del Mes";
-                }
-                this.renderResults();
-            },
-
             renderResults: function() {
-                let inc = 0; let exp = 0;
-                if(this.data.isAnnualView) {
-                    const currentYear = this.data.financeDate.getFullYear().toString();
-                    inc = this.data.appointments.reduce((s, a) => s + (a.status === 'closed' && a.dateStr.startsWith(currentYear) ? (a.price || 0) : 0), 0);
-                    exp = this.data.expenses.reduce((s, e) => s + (e.date.startsWith(currentYear) ? e.amount : 0), 0);
-                } else {
-                    const targetMonth = this.getFormattedMonth(this.data.financeDate);
-                    inc = this.data.appointments.reduce((s, a) => s + (a.status === 'closed' && a.dateStr.startsWith(targetMonth) ? (a.price || 0) : 0), 0);
-                    exp = this.data.expenses.reduce((s, e) => s + (e.date.startsWith(targetMonth) ? e.amount : 0), 0);
-                }
+                const inc = this.data.appointments.reduce((s, a) => s + (a.price || 0), 0);
+                const exp = this.data.expenses.reduce((s, e) => s + e.amount, 0);
                 const res = inc - exp;
                 document.getElementById('res-income').innerText = inc.toFixed(2) + ' €';
                 document.getElementById('res-expenses').innerText = exp.toFixed(2) + ' €';
@@ -1025,123 +901,19 @@
                 document.getElementById(tabId).classList.add('active');
                 event.target.classList.add('active');
             },
-
-            setTicketView: function(view, btnElement) {
-                this.data.ticketView = view;
-                document.getElementById('btn-ticket-week').classList.remove('active');
-                document.getElementById('btn-ticket-month').classList.remove('active');
-                btnElement.classList.add('active');
-                this.renderEstadisticas();
-            },
-
             renderEstadisticas: function() {
                 const apps = this.data.appointments;
-                const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-
-                const createBarRow = (label, value, max, color = 'var(--primary-magenta)') => {
-                    const pct = max > 0 ? (value / max) * 100 : 0;
-                    return `<div class="chart-row">
-                        <div class="chart-label">${label}</div>
-                        <div class="chart-bar-container">
-                            <div class="chart-bar" style="width: ${pct}%; background-color: ${color};"></div>
-                        </div>
-                        <div class="chart-value">${value}</div>
-                    </div>`;
-                };
-
                 if (apps.length === 0) return;
-                
-                // 1. SERVICIOS
                 const serviceCounts = {};
                 apps.forEach(a => { const s = (a.service || "Sin definir").trim(); serviceCounts[s] = (serviceCounts[s] || 0) + 1; });
                 const sortedServices = Object.entries(serviceCounts).sort((a,b) => b[1] - a[1]);
-                const maxServ = sortedServices[0][1];
+                const totalApps = apps.length;
                 let htmlServices = "";
                 sortedServices.forEach(([name, count]) => {
-                    htmlServices += createBarRow(name, count, maxServ);
+                    const pct = ((count / totalApps) * 100).toFixed(1);
+                    htmlServices += `<div class="chart-row"><div class="chart-label">${name}</div><div class="chart-bar-container"><div class="chart-bar" style="width: ${pct}%"></div></div><div class="chart-value">${pct}%</div></div>`;
                 });
                 document.getElementById('chart-services').innerHTML = htmlServices;
-
-                // 2. DÍA SEMANA (Citas)
-                const weekCounts = [0,0,0,0,0,0,0];
-                apps.forEach(a => { const d = new Date(a.dateStr); weekCounts[d.getDay()]++; });
-                const maxWeekCount = Math.max(...weekCounts) || 1;
-                let htmlWeekDist = "";
-                weekCounts.forEach((count, index) => {
-                    htmlWeekDist += createBarRow(dayNames[index], count, maxWeekCount);
-                });
-                document.getElementById('chart-week-dist').innerHTML = htmlWeekDist;
-
-                // 3. COMPARATIVA (Ingresos)
-                const monthlyIncome = {};
-                apps.filter(a => a.status === 'closed').forEach(a => {
-                    const monthKey = a.dateStr.substring(0, 7);
-                    monthlyIncome[monthKey] = (monthlyIncome[monthKey] || 0) + a.price;
-                });
-                const sortedMonths = Object.entries(monthlyIncome).sort();
-                const maxMonthIncome = Math.max(...Object.values(monthlyIncome)) || 1;
-                let htmlComp = "";
-                sortedMonths.forEach(([month, income]) => {
-                    htmlComp += createBarRow(month, income.toFixed(0) + '€', maxMonthIncome);
-                });
-                document.getElementById('chart-month-phases').innerHTML = htmlComp || "<p>No hay datos.</p>";
-
-                // 4. FACT/DÍA (Ingresos por Día Semana)
-                const weekIncome = [0,0,0,0,0,0,0];
-                apps.filter(a => a.status === 'closed').forEach(a => {
-                    weekIncome[new Date(a.dateStr).getDay()] += a.price;
-                });
-                const maxWeekIncome = Math.max(...weekIncome) || 1;
-                let htmlRevWeek = "";
-                weekIncome.forEach((inc, idx) => {
-                    htmlRevWeek += createBarRow(dayNames[idx], inc.toFixed(0) + '€', maxWeekIncome, 'var(--success)');
-                });
-                document.getElementById('chart-rev-week').innerHTML = htmlRevWeek;
-
-                // 5. FACT/MES (Día 1-31)
-                const dayOfMonthIncome = {};
-                apps.filter(a => a.status === 'closed').forEach(a => {
-                    const dayNum = a.dateStr.split('-')[2];
-                    dayOfMonthIncome[dayNum] = (dayOfMonthIncome[dayNum] || 0) + a.price;
-                });
-                const maxDOMIncome = Math.max(...Object.values(dayOfMonthIncome)) || 1;
-                let htmlRevMonth = "";
-                Object.keys(dayOfMonthIncome).sort((a,b) => a - b).forEach(day => {
-                    htmlRevMonth += createBarRow(`Dia ${day}`, dayOfMonthIncome[day].toFixed(0) + '€', maxDOMIncome, 'var(--success)');
-                });
-                document.getElementById('chart-rev-month').innerHTML = htmlRevMonth || "<p>No hay datos.</p>";
-
-                // 6. TICKET MEDIO
-                let htmlTicket = "";
-                if (this.data.ticketView === 'week') {
-                    const weekStats = dayNames.map(() => ({ total: 0, count: 0 }));
-                    apps.filter(a => a.status === 'closed').forEach(a => {
-                        const idx = new Date(a.dateStr).getDay();
-                        weekStats[idx].total += a.price;
-                        weekStats[idx].count++;
-                    });
-                    const maxTicket = Math.max(...weekStats.map(s => s.count > 0 ? s.total / s.count : 0)) || 1;
-                    weekStats.forEach((stat, idx) => {
-                        const avg = stat.count > 0 ? (stat.total / stat.count).toFixed(0) : 0;
-                        htmlTicket += createBarRow(dayNames[idx], avg + '€', maxTicket, 'var(--text-blue)');
-                    });
-                } else {
-                    const monthlyStats = {};
-                    apps.filter(a => a.status === 'closed').forEach(a => {
-                        const m = a.dateStr.substring(0, 7);
-                        if (!monthlyStats[m]) monthlyStats[m] = { total: 0, count: 0 };
-                        monthlyStats[m].total += a.price;
-                        monthlyStats[m].count++;
-                    });
-                    const sortedMonthStats = Object.entries(monthlyStats).sort((a, b) => a[0].localeCompare(b[0]));
-                    const maxTicketMonth = Math.max(...Object.values(monthlyStats).map(s => s.count > 0 ? s.total / s.count : 0)) || 1;
-                    
-                    sortedMonthStats.forEach(([month, stats]) => {
-                        const avg = stats.count > 0 ? (stats.total / stats.count).toFixed(0) : 0;
-                        htmlTicket += createBarRow(month, avg + '€', maxTicketMonth, 'var(--text-blue)');
-                    });
-                }
-                document.getElementById('chart-ticket-week').innerHTML = htmlTicket;
             },
 
             showToast: function(m) {
@@ -1151,9 +923,7 @@
             }
         };
 
-        // Exponer app al window para poder llamarlo desde HTML (onclicks)
-        window.app = app;
         document.addEventListener('DOMContentLoaded', () => { app.init(); });
     </script>
 </body>
-</html>
+</html> 
