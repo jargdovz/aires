@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AiresGM v1.31</title>
+    <title>AiresGM v1.34</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#D81B60">
@@ -75,7 +75,7 @@
             padding: 20px; min-height: 100%; box-shadow: var(--shadow-sm); animation: fadeIn 0.3s ease;
         }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         h2 { font-size: 1.4rem; margin-bottom: 20px; border-bottom: 2px solid var(--primary-magenta); padding-bottom: 10px; display: inline-block; }
         h3 { font-size: 1.1rem; margin-bottom: 15px; color: var(--text-blue); }
@@ -225,7 +225,7 @@
 <body>
 
     <header>
-        <h1>AiresGM <small style="font-weight:400; font-size:0.8em; opacity:0.8">v1.31</small></h1>
+        <h1>AiresGM <small style="font-weight:400; font-size:0.8em; opacity:0.8">v1.34</small></h1>
         <div class="nav-header-container">
             <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
             <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
@@ -235,6 +235,7 @@
             <button class="nav-btn-header" onclick="app.showSection('stock', this)">Stock</button>
             <button class="nav-btn-header" onclick="app.showSection('estadisticas', this)">Estadísticas</button>
             <button class="nav-btn-header" onclick="app.showSection('clientes', this)">Clientes</button>
+            <button class="nav-btn-header" onclick="app.showSection('opciones', this)">Opciones</button>
         </div>
     </header>
 
@@ -257,23 +258,20 @@
             </div>
         </section>
 
-        <!-- SECCIÓN 2: INGRESOS (VISTA DIARIA O MENSUAL) -->
+        <!-- SECCIÓN 2: INGRESOS -->
         <section id="ingresos" class="section">
             <h2>Ingresos</h2>
             
-            <!-- BOTÓN TOGGLE -->
             <div class="toggle-container">
                 <button id="btn-income-toggle" class="toggle-btn" onclick="app.toggleIncomeView()">Ver Mensual</button>
             </div>
 
-            <!-- NAVEGACIÓN POR DÍA -->
             <div class="date-nav" id="income-day-nav">
                 <button onclick="app.changeIncomeDay(-1)">&#10094;</button>
                 <span id="income-date-display">Hoy</span>
                 <button onclick="app.changeIncomeDay(1)">&#10095;</button>
             </div>
 
-            <!-- NAVEGACIÓN POR MES (Oculta por defecto) -->
             <div class="date-nav" id="income-month-nav" style="display:none;">
                 <button onclick="app.changeFinanceMonth(-1)">&#10094;</button>
                 <span id="income-month-display">Mes Actual</span>
@@ -400,6 +398,20 @@
             </div>
         </section>
 
+        <!-- SECCIÓN 9: OPCIONES -->
+        <section id="opciones" class="section">
+            <h2 style="font-size: 1.2rem; line-height: 1.2; color: var(--primary-magenta);">2026 hecho con amor por jargdovz con GPL-4.7.</h2>
+            <div style="margin-top: 30px;">
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="app.exportData()">Exportar Datos (Backup)</button>
+                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="app.importData(this)">
+                    <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">Importar Datos</button>
+                    <div style="height:1px; background:#ccc; margin:10px 0;"></div>
+                    <button class="btn btn-danger" onclick="app.resetData()">Borrar Todo (Reset)</button>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- MODAL CREAR CITA -->
@@ -505,11 +517,11 @@
         const app = {
             data: {
                 currentDate: new Date(),
-                incomeDate: new Date(), // Fecha específica para ingresos diarios
+                incomeDate: new Date(),
                 financeDate: new Date(),
                 isAnnualView: false,
                 ticketView: 'week',
-                incomeView: 'day', // Nuevo estado: 'day' o 'month'
+                incomeView: 'day',
                 appointments: [],
                 expenses: [],
                 purchases: [],
@@ -525,7 +537,7 @@
                 this.renderGrid();
                 document.getElementById('expense-date').value = this.getFormattedDate(new Date());
                 this.updateFinanceDisplays();
-                this.initIncomeViewUI(); // Inicializar UI de ingresos
+                this.initIncomeViewUI();
             },
 
             saveData: function() { 
@@ -550,11 +562,70 @@
                         this.data.closedDays = parsed.closedDays || [];
                         this.data.ticketView = parsed.ticketView || 'week';
                         this.data.isAnnualView = parsed.isAnnualView || false;
-                        this.data.incomeView = parsed.incomeView || 'day'; // Cargar vista ingresos
+                        this.data.incomeView = parsed.incomeView || 'day';
                     } catch(e) {
                         console.error("Error cargando datos", e);
                     }
                 }
+            },
+
+            /* --- OPCIONES (MEJORADA EXPORTACIÓN PARA WINDOWS) --- */
+            showOptions: function() {
+                this.openModal('opciones-modal');
+            },
+
+            exportData: function() {
+                const dataStr = localStorage.getItem('airesgm_data');
+                if(!dataStr) { return this.showToast("No hay datos para exportar."); }
+                
+                try {
+                    const blob = new Blob([dataStr], {type: "application/json"});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    
+                    // Configuración para Windows (target blank asegura descarga en nueva pestaña)
+                    a.href = url;
+                    a.download = `AiresGM_Backup_${this.getFormattedDate(new Date())}.json`;
+                    a.target = "_blank";
+                    a.style.display = 'none'; // Ocultar el elemento para que no parpadee la UI
+
+                    document.body.appendChild(a);
+                    
+                    // Retraso pequeño para asegurar que el evento de click se procesa antes de eliminar
+                    setTimeout(() => {
+                        a.click();
+                        setTimeout(() => {
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                        }, 100);
+                    }, 10);
+                    
+                    this.showToast("Datos exportados correctamente");
+                } catch (e) {
+                    console.error("Error exportando", e);
+                    this.showToast("Error al exportar datos");
+                }
+            },
+
+            importData: function(input) {
+                const file = input.files[0];
+                if(!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        if(!json.appointments || !Array.isArray(json.appointments)) throw new Error("Formato inválido");
+                        
+                        localStorage.setItem('airesgm_data', JSON.stringify(json));
+                        if(confirm("Datos cargados correctamente. La app se recargará para aplicar los cambios.")) {
+                            location.reload();
+                        }
+                    } catch (err) {
+                        alert("Error al leer el archivo: " + err.message);
+                    }
+                };
+                reader.readAsText(file);
             },
 
             resetData: function() {
@@ -579,6 +650,7 @@
                 if(id === 'citas') { this.renderDate(); this.renderGrid(); }
                 if(id === 'estadisticas') this.renderEstadisticas();
                 if(id === 'clientes') this.renderClients();
+                if(id === 'opciones') { /* No hace nada, ya estamos ahí */ }
             },
             
             closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
@@ -601,7 +673,7 @@
             getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
             getDisplayMonthYear: function(d) { return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); },
 
-            /* --- LÓGICA INGRESOS (TOGGLE Y NAVEGACIÓN) --- */
+            /* --- INGRESOS (TOGGLE Y NAVEGACIÓN) --- */
             toggleIncomeView: function() {
                 this.data.incomeView = this.data.incomeView === 'day' ? 'month' : 'day';
                 this.saveData();
@@ -648,7 +720,7 @@
                 const activeSection = document.querySelector('.section.active').id;
                 if(activeSection === 'gastos') this.renderExpenses();
                 if(activeSection === 'resultados') this.renderResults();
-                if(activeSection === 'ingresos') this.renderIncomes(); // Actualizar si estamos en mensual
+                if(activeSection === 'ingresos') this.renderIncomes();
             },
 
             updateFinanceDisplays: function() {
@@ -746,9 +818,8 @@
                         
                         const timeCell = document.createElement('div');
                         timeCell.className = 'time-label';
-                        if(m === 0) {
-                            timeCell.innerText = timeStr;
-                        }
+                        timeCell.innerText = timeStr; // Mostrar hora en todas las filas
+                        
                         grid.appendChild(timeCell);
                         
                         for (let col = 1; col <= 3; col++) {
@@ -979,7 +1050,7 @@
                         tot += e.amount;
                         const li = document.createElement('li');
                         li.className = 'list-item';
-                        li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div>`;
+                        li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div></div>`;
                         list.appendChild(li);
                     }
                 });
@@ -993,7 +1064,7 @@
                 }
             },
 
-            /* --- INGRESOS (UNIFICADO DIARIO/MENSUAL) --- */
+            /* --- INGRESOS (VISTA UNIFICADO DIARIO/MENSUAL) --- */
             renderIncomes: function() {
                 const list = document.getElementById('income-list'); 
                 list.innerHTML = '';
@@ -1030,7 +1101,6 @@
                         });
                     }
                     document.getElementById('total-income').innerText = dayTotal.toFixed(2) + ' €';
-
                 } else {
                     // VISTA MENSUAL
                     let monthTotal = 0;
@@ -1199,7 +1269,7 @@
                 document.getElementById('chart-services').innerHTML = htmlServices;
 
                 // 2. DÍA SEMANA
-                const weekCounts = [0,0,0,0,0,0,0];
+                const weekCounts = [0,0,0,0,0,0];
                 apps.forEach(a => {
                     const d = new Date(a.dateStr);
                     const dayIndex = d.getDay();
@@ -1228,7 +1298,7 @@
                 document.getElementById('chart-month-phases').innerHTML = htmlComp || "<p>No hay datos de ingresos cerrados.</p>";
 
                 // 4. FACT/DÍA
-                const weekIncome = [0,0,0,0,0,0,0];
+                const weekIncome = [0,0,0,0,0,0];
                 apps.filter(a => a.status === 'closed').forEach(a => {
                     const dayIndex = new Date(a.dateStr).getDay();
                     weekIncome[dayIndex] += a.price;
