@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AiresGM v1.3</title>
+    <title>AiresGM v1.31</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#D81B60">
@@ -17,18 +17,21 @@
             --text-blue: #1A2C4E;
             --white: #ffffff;
             --gray-light: #B3E5FC;
+            --gray-bg: #f5f5f5;
             --danger: #d9534f;
             --success: #5cb85c;
-            --shadow: 0 4px 6px rgba(0,0,0,0.15);
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
             --radius: 12px;
             --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --row-height: 40px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: var(--font-family);
-            background-color: var(--primary-magenta);
+            background-color: var(--gray-bg);
             color: var(--text-blue);
             height: 100vh;
             display: flex;
@@ -46,6 +49,7 @@
             box-shadow: var(--shadow);
             z-index: 1000;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         h1 { font-size: 1.1rem; font-weight: 700; color: var(--white); white-space: nowrap; flex-shrink: 0; }
@@ -63,121 +67,165 @@
         }
         .nav-btn-header:hover, .nav-btn-header.active { background: var(--white); color: var(--primary-magenta); }
 
-        /* --- CONTENIDO --- */
-        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; position: relative; }
+        /* --- CONTENIDO PRINCIPAL --- */
+        main { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; position: relative; scroll-behavior: smooth;}
+        
         .section {
             display: none; background-color: var(--bg-light-blue); border-radius: var(--radius);
-            padding: 20px; min-height: 100%; box-shadow: var(--shadow); animation: fadeIn 0.3s ease;
+            padding: 20px; min-height: 100%; box-shadow: var(--shadow-sm); animation: fadeIn 0.3s ease;
         }
         .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         h2 { font-size: 1.4rem; margin-bottom: 20px; border-bottom: 2px solid var(--primary-magenta); padding-bottom: 10px; display: inline-block; }
+        h3 { font-size: 1.1rem; margin-bottom: 15px; color: var(--text-blue); }
 
         /* --- BOTONES GENERALES --- */
-        .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--white); width: 100%; margin-bottom: 8px; font-size: 0.95rem; display:block;}
+        .btn { padding: 12px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--white); width: 100%; margin-bottom: 8px; font-size: 0.95rem; display:block; transition: opacity 0.2s;}
+        .btn:active { opacity: 0.8; }
         .btn-primary { background: var(--text-blue); }
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-secondary { background: #757575; }
+        
         .btn-outline { background: transparent; border: 2px solid var(--text-blue); color: var(--text-blue); width: auto; display:inline-block; padding: 8px 15px; }
         .btn-outline.active { background: var(--text-blue); color: var(--white); }
         .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
 
         .btn-add { background-color: var(--primary-magenta); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; width: auto; display:inline-block;}
 
+        /* --- COMPONENTES UI --- */
         .search-bar-container { display: flex; gap: 10px; margin-bottom: 20px; }
         #client-search { flex: 1; padding: 12px; border: 1px solid #B3E5FC; border-radius: 8px; background: var(--white); font-size: 1rem; }
+        
         .client-item { background: var(--white); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; cursor: pointer; }
         .client-info h3 { font-size: 1rem; margin-bottom: 2px; }
         .client-info p { font-size: 0.9rem; color: #666; }
 
         /* --- GRID DE CITAS --- */
-        .date-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--white); padding: 10px; border-radius: var(--radius); }
+        .date-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--white); padding: 10px; border-radius: var(--radius); box-shadow: var(--shadow-sm); }
         .date-nav button { background: var(--primary-magenta); color: var(--white); border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
-        .date-nav span { font-weight: bold; color: var(--text-blue); }
+        .date-nav span { font-weight: bold; color: var(--text-blue); font-size: 0.95rem; }
         
-        .agenda-container { display: grid; grid-template-columns: 50px repeat(3, 1fr); gap: 2px; overflow-x: auto; padding-bottom: 20px; }
-        .time-label { text-align: right; padding-right: 5px; font-size: 0.8rem; color: #555; height: 40px; display: flex; align-items: center; justify-content: flex-end; }
+        .agenda-container-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .agenda-container { 
+            display: grid; 
+            grid-template-columns: 60px repeat(3, minmax(80px, 1fr)); 
+            gap: 0; 
+            border-top: 1px solid #ddd;
+            border-left: 1px solid #ddd;
+            min-width: 100%; 
+        }
+
+        .time-label { 
+            text-align: right; padding-right: 8px; font-size: 0.75rem; color: #555; 
+            display: flex; align-items: center; justify-content: flex-end; 
+            background-color: #fff; 
+            height: var(--row-height);
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            font-weight: 500;
+        }
         
         .slot { 
-            background-color: var(--white); border: 1px solid #B3E5FC; height: 40px; position: relative; 
+            background-color: #fff; 
+            position: relative; 
             cursor: pointer; transition: background 0.2s;
+            min-width: 80px;
+            height: var(--row-height);
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
         }
-        .slot:hover { background-color: var(--gray-light); }
+        .slot:hover:not(.day-closed) { background-color: var(--gray-light); }
+        
         .slot.day-closed {
-            background-color: #e0e0e0;
+            background-color: #f0f0f0;
             cursor: not-allowed;
-            border-color: transparent;
+            background-image: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #e6e6e6 10px, #e6e6e6 20px);
         }
         
         .appointment-block { 
-            position: absolute; top: 0; left: 1px; right: 1px; border-radius: 4px; padding: 4px; font-size: 0.8rem; 
-            overflow: hidden; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+            position: absolute; top: 0; left: 1px; right: 1px; bottom: 1px; border-radius: 4px; padding: 4px; font-size: 0.75rem; 
+            overflow: hidden; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
             display: flex; flex-direction: column; justify-content: center;
             pointer-events: auto;
             font-weight: bold;
+            line-height: 1.1;
         }
 
         .appointment-block.status-pending { background-color: #FFEB3B; color: #212121; border: 1px solid #FBC02D; }
         .appointment-block.status-closed { background-color: var(--text-blue); color: white; }
 
         /* --- LISTAS Y TARJETAS --- */
-        .summary-card { background-color: var(--white); padding: 15px; border-radius: var(--radius); margin-bottom: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .total-amount { font-size: 2rem; font-weight: bold; color: var(--primary-magenta); }
+        .summary-card { background-color: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; text-align: center; box-shadow: var(--shadow-sm); }
+        .total-amount { font-size: 2rem; font-weight: bold; color: var(--primary-magenta); margin-top: 5px; }
+        
         .list-group { list-style: none; margin-top: 15px; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); background: var(--white); margin-bottom: 5px; border-radius: 8px; }
         .list-actions button { background: none; border: none; cursor: pointer; font-size: 0.9rem; margin-left: 10px; color: var(--danger); font-weight: bold; }
-        .quick-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .quick-form input, .quick-form select { padding: 10px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; flex: 1; }
         
-        .result-box { padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 20px; color: white; font-size: 1.5rem; font-weight: bold; }
+        .quick-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .quick-form input, .quick-form select { padding: 10px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; flex: 1; min-width: 120px;}
+        
+        .result-box { padding: 20px; border-radius: var(--radius); text-align: center; margin-top: 20px; color: white; font-size: 1.8rem; font-weight: bold; }
         .pos { background-color: var(--success); } .neg { background-color: var(--danger); }
         
         .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--white); border: 1px solid #B3E5FC; margin-bottom: 8px; border-radius: 8px; }
         .stock-item-left { display: flex; align-items: center; gap: 10px; flex: 1; }
         .stock-item input[type="checkbox"] { transform: scale(1.2); accent-color: var(--primary-magenta); }
+        .stock-item.checked .stock-text { text-decoration: line-through; color: #999; }
 
         /* --- ESTADÍSTICAS --- */
-        .tabs { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 15px; padding-bottom: 5px; }
+        .tabs { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 15px; padding-bottom: 5px; -ms-overflow-style: none; scrollbar-width: none;}
+        .tabs::-webkit-scrollbar{ display:none;}
         .tab-btn { background: var(--white); color: var(--text-blue); border: 1px solid #ccc; padding: 8px 12px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 0.9rem; flex-shrink: 0; }
         .tab-btn.active { background: var(--primary-magenta); color: var(--white); border-color: var(--primary-magenta); }
         .tab-content { display: none; } .tab-content.active { display: block; }
+        
         .chart-row { display: flex; align-items: center; margin-bottom: 12px; font-size: 0.9rem; }
         .chart-label { width: 80px; text-align: right; margin-right: 10px; font-weight: bold; font-size: 0.8rem;}
         .chart-bar-container { flex: 1; background: #eee; height: 20px; border-radius: 10px; overflow: hidden; position: relative; }
         .chart-bar { height: 100%; background: var(--primary-magenta); width: 0%; transition: width 1s ease; }
-        .chart-value { margin-left: 10px; font-size: 0.8rem; width: 45px; text-align: right;}
+        .chart-value { margin-left: 10px; font-size: 0.8rem; width: 50px; text-align: right;}
         
         /* --- MODAL --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(2px); }
         .modal-overlay.open { opacity: 1; visibility: visible; }
-        .modal { background: var(--bg-light-blue); padding: 25px; width: 90%; max-width: 400px; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid var(--primary-magenta); max-height: 90vh; overflow-y: auto; }
+        .modal { background: var(--bg-light-blue); padding: 25px; width: 90%; max-width: 400px; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 2px solid var(--primary-magenta); max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s;}
+        .modal-overlay.open .modal { transform: scale(1); }
         
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold; color: var(--text-blue); }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; font-family: inherit; }
-        .form-group input[readonly] { background: #eee; cursor: not-allowed; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid #B3E5FC; background: var(--white); border-radius: 8px; font-family: inherit; font-size: 1rem; }
+        .form-group input[readonly] { background: #eee; color: #666; cursor: not-allowed; }
 
         /* --- TOAST --- */
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: var(--text-blue); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 3000; }
-        #toast.show { opacity: 1; }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background-color: var(--text-blue); color: white; padding: 12px 24px; border-radius: 25px; font-size: 0.95rem; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); white-space: nowrap;}
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         .toggle-container { text-align: center; margin-bottom: 15px; }
         .toggle-btn { 
             background: white; border: 2px solid var(--text-blue); color: var(--text-blue); 
-            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer;
+            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s;
         }
         .toggle-btn.active { background: var(--text-blue); color: white; }
         
         .ticket-sub-toggle { margin-bottom: 15px; display: flex; justify-content: center; gap: 10px; }
         .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .modal-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
 
     </style>
 </head>
 <body>
 
     <header>
-        <h1>AiresGM v1.3</h1>
+        <h1>AiresGM <small style="font-weight:400; font-size:0.8em; opacity:0.8">v1.31</small></h1>
         <div class="nav-header-container">
             <button class="nav-btn-header active" onclick="app.showSection('citas', this)">Citas</button>
             <button class="nav-btn-header" onclick="app.showSection('ingresos', this)">Ingresos</button>
@@ -193,32 +241,50 @@
     <main>
         <!-- SECCIÓN 1: CITAS -->
         <section id="citas" class="section active">
-            <h2>Gestión de Citas</h2>
+            <h2>Agenda Diaria</h2>
             <div class="date-nav">
                 <button onclick="app.changeDay(-1)">&#10094;</button>
                 <span id="current-date-display">Hoy</span>
                 <button onclick="app.changeDay(1)">&#10095;</button>
             </div>
-            <div class="agenda-container" id="agenda-grid"></div>
+            
+            <div class="agenda-container-wrapper">
+                <div class="agenda-container" id="agenda-grid"></div>
+            </div>
+
             <div style="margin-top: 20px;">
                 <button id="btn-close-day" class="btn btn-success" onclick="app.closeDay()">Cerrar Día</button>
             </div>
         </section>
 
-        <!-- SECCIÓN 2: INGRESOS -->
+        <!-- SECCIÓN 2: INGRESOS (VISTA DIARIA O MENSUAL) -->
         <section id="ingresos" class="section">
             <h2>Ingresos</h2>
-            <div class="date-nav">
+            
+            <!-- BOTÓN TOGGLE -->
+            <div class="toggle-container">
+                <button id="btn-income-toggle" class="toggle-btn" onclick="app.toggleIncomeView()">Ver Mensual</button>
+            </div>
+
+            <!-- NAVEGACIÓN POR DÍA -->
+            <div class="date-nav" id="income-day-nav">
+                <button onclick="app.changeIncomeDay(-1)">&#10094;</button>
+                <span id="income-date-display">Hoy</span>
+                <button onclick="app.changeIncomeDay(1)">&#10095;</button>
+            </div>
+
+            <!-- NAVEGACIÓN POR MES (Oculta por defecto) -->
+            <div class="date-nav" id="income-month-nav" style="display:none;">
                 <button onclick="app.changeFinanceMonth(-1)">&#10094;</button>
-                <span id="income-date-display">Mes Actual</span>
+                <span id="income-month-display">Mes Actual</span>
                 <button onclick="app.changeFinanceMonth(1)">&#10095;</button>
             </div>
 
             <div class="summary-card">
-                <small>Total Ingresos (Mes)</small>
+                <small id="income-total-label">Total Ingresos (Este día)</small>
                 <div class="total-amount" id="total-income">0.00 €</div>
             </div>
-            <h3>Historial (Sólo cerradas)</h3>
+            <h3 id="income-list-title">Detalle de Citas</h3>
             <ul class="list-group" id="income-list"></ul>
         </section>
 
@@ -232,7 +298,7 @@
             </div>
 
             <div class="quick-form">
-                <input type="number" id="expense-amount" placeholder="€">
+                <input type="number" id="expense-amount" placeholder="€" inputmode="decimal">
                 <input type="text" id="expense-concept" placeholder="Concepto">
                 <input type="date" id="expense-date" title="Fecha del gasto">
                 <button class="btn-add" onclick="app.addExpense()">Añadir</button>
@@ -261,12 +327,18 @@
                 <span style="flex:1; text-align:center;">Año <span id="results-year-display">2024</span></span>
             </div>
 
-            <div class="summary-card">
-                <p>Ingresos: <span id="res-income">0.00 €</span></p>
-                <p>Gastos: <span id="res-expenses">0.00 €</span></p>
+            <div class="summary-card" style="display:flex; justify-content:space-around;">
+                <div style="text-align:center">
+                    <small>Ingresos</small><br>
+                    <strong style="font-size:1.2rem; color:var(--success)" id="res-income">0.00 €</strong>
+                </div>
+                <div style="text-align:center">
+                    <small>Gastos</small><br>
+                    <strong style="font-size:1.2rem; color:var(--danger)" id="res-expenses">0.00 €</strong>
+                </div>
             </div>
             <div id="result-box" class="result-box pos">0.00 €</div>
-            <p style="text-align:center; margin-top:10px; font-size:0.9rem;" id="result-label">Balance del Mes</p>
+            <p style="text-align:center; margin-top:10px; font-size:0.9rem; color:#666;" id="result-label">Balance del Mes</p>
         </section>
 
         <!-- SECCIÓN 5: COMPRAS -->
@@ -282,7 +354,7 @@
         <section id="stock" class="section">
             <h2>Lista de Compras</h2>
             <div class="quick-form">
-                <input type="text" id="stock-item" placeholder="Producto">
+                <input type="text" id="stock-item" placeholder="Producto a comprar...">
                 <button class="btn-add" onclick="app.addStockItem()">Añadir</button>
             </div>
             <div id="stock-list"></div>
@@ -307,7 +379,6 @@
             
             <div id="tab-ticket" class="tab-content">
                 <h3>Ticket Medio</h3>
-                <!-- Nuevo Toggle para Ticket Medio -->
                 <div class="ticket-sub-toggle">
                     <button id="btn-ticket-week" class="toggle-btn active btn-sm" onclick="app.setTicketView('week', this)">Semana</button>
                     <button id="btn-ticket-month" class="toggle-btn btn-sm" onclick="app.setTicketView('month', this)">Mes</button>
@@ -325,7 +396,7 @@
             </div>
             <div id="client-list-container">
                 <ul class="client-list" id="client-list"></ul>
-                <p id="no-clients-msg" style="text-align:center; margin-top:20px; display:none;">No hay clientes.</p>
+                <p id="no-clients-msg" style="text-align:center; margin-top:20px; display:none; color:#999;">No hay clientes registrados.</p>
             </div>
         </section>
 
@@ -336,14 +407,14 @@
         <div class="modal">
             <h3>Nueva Cita</h3>
             <input type="hidden" id="create-col">
-            <div class="form-group"><label>Hora</label><input type="text" id="create-time" readonly style="background:#eee;"></div>
+            <div class="form-group"><label>Hora</label><input type="text" id="create-time" readonly></div>
             <div class="form-group"><label>Duración (min)</label><select id="create-duration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hora</option><option value="90">1h 30min</option><option value="120">2 horas</option></select></div>
-            <div class="form-group"><label>Nombre</label><input type="text" id="create-client" placeholder="Nombre"></div>
-            <div class="form-group"><label>Servicio</label><input type="text" id="create-service" placeholder="Ej: Tinte, Corte..."></div>
-            <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00"></div>
+            <div class="form-group"><label>Nombre</label><input type="text" id="create-client" placeholder="Nombre cliente" autocomplete="off"></div>
+            <div class="form-group"><label>Servicio</label><input type="text" id="create-service" placeholder="Ej: Tinte, Corte..." autocomplete="off"></div>
+            <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00" inputmode="decimal"></div>
             <div class="form-group"><label>Observaciones</label><textarea id="create-obs" rows="2"></textarea></div>
             <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('create-modal')">Salir</button>
+                <button class="btn btn-secondary" onclick="app.closeModal('create-modal')">Cancelar</button>
                 <button class="btn btn-success" onclick="app.createAppointment()">Crear Cita</button>
             </div>
         </div>
@@ -354,17 +425,17 @@
         <div class="modal">
             <h3>Gestionar Cita</h3>
             <input type="hidden" id="manage-id">
-            <div class="form-group"><label>Hora Inicio</label><input type="text" id="manage-time" readonly style="background:#eee;"></div>
+            <div class="form-group"><label>Hora Inicio</label><input type="text" id="manage-time" readonly></div>
             <div class="form-group"><label>Nombre Cliente</label><input type="text" id="manage-client"></div>
             <div class="form-group"><label>Servicio</label><input type="text" id="manage-service"></div>
-            <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price"></div>
+            <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price" inputmode="decimal"></div>
             <div class="form-group"><label>Observaciones</label><textarea id="manage-obs" rows="2"></textarea></div>
             
             <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="app.closeModal('manage-modal')">1) Salir</button>
-                <button class="btn btn-primary" onclick="app.modifyAppointment()">2) Modificar</button>
-                <button class="btn btn-danger" onclick="app.deleteCurrentAppointment()">3) Cancelar Reserva</button>
-                <button class="btn btn-success" onclick="app.closeCurrentAppointment()">4) Cerrar Reserva</button>
+                <button class="btn btn-secondary" onclick="app.closeModal('manage-modal')">Salir</button>
+                <button class="btn btn-primary" onclick="app.modifyAppointment()">Guardar Cambios</button>
+                <button class="btn btn-danger" onclick="app.deleteCurrentAppointment()">Cancelar Reserva</button>
+                <button class="btn btn-success" onclick="app.closeCurrentAppointment()">Cobrar / Cerrar</button>
             </div>
         </div>
     </div>
@@ -383,7 +454,7 @@
             </div>
             <div class="form-group">
                 <label>Coste Total (€)</label>
-                <input type="number" id="purchase-cost" placeholder="0.00">
+                <input type="number" id="purchase-cost" placeholder="0.00" inputmode="decimal">
             </div>
             <div class="form-group">
                 <label>Productos Comprados</label>
@@ -410,7 +481,7 @@
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="app.closeModal('client-modal')">Cerrar</button>
-                <button class="btn btn-primary" onclick="app.saveClientChanges()">Guardar</button>
+                <button class="btn btn-primary" onclick="app.saveClientChanges()">Guardar Datos</button>
                 <button class="btn btn-danger" onclick="app.deleteClient()">Eliminar Ficha</button>
             </div>
         </div>
@@ -434,9 +505,11 @@
         const app = {
             data: {
                 currentDate: new Date(),
+                incomeDate: new Date(), // Fecha específica para ingresos diarios
                 financeDate: new Date(),
                 isAnnualView: false,
-                ticketView: 'week', // Nuevo estado: 'week' o 'month'
+                ticketView: 'week',
+                incomeView: 'day', // Nuevo estado: 'day' o 'month'
                 appointments: [],
                 expenses: [],
                 purchases: [],
@@ -448,24 +521,46 @@
             init: function() {
                 this.loadData();
                 this.renderDate();
+                this.renderIncomeDate(); 
                 this.renderGrid();
                 document.getElementById('expense-date').value = this.getFormattedDate(new Date());
                 this.updateFinanceDisplays();
+                this.initIncomeViewUI(); // Inicializar UI de ingresos
             },
 
-            saveData: function() { localStorage.setItem('airesgm_data', JSON.stringify(this.data)); },
+            saveData: function() { 
+                try {
+                    localStorage.setItem('airesgm_data', JSON.stringify(this.data)); 
+                } catch (e) {
+                    console.error("Error guardando datos", e);
+                    alert("Espacio lleno o error de almacenamiento.");
+                }
+            },
+            
             loadData: function() {
                 const stored = localStorage.getItem('airesgm_data');
                 if (stored) {
-                    const parsed = JSON.parse(stored);
-                    this.data.appointments = parsed.appointments || [];
-                    this.data.expenses = parsed.expenses || [];
-                    this.data.purchases = parsed.purchases || [];
-                    this.data.stock = parsed.stock || [];
-                    this.data.clients = parsed.clients || [];
-                    this.data.closedDays = parsed.closedDays || [];
-                    // Migrar ticketView si existe version anterior
-                    this.data.ticketView = parsed.ticketView || 'week';
+                    try {
+                        const parsed = JSON.parse(stored);
+                        this.data.appointments = parsed.appointments || [];
+                        this.data.expenses = parsed.expenses || [];
+                        this.data.purchases = parsed.purchases || [];
+                        this.data.stock = parsed.stock || [];
+                        this.data.clients = parsed.clients || [];
+                        this.data.closedDays = parsed.closedDays || [];
+                        this.data.ticketView = parsed.ticketView || 'week';
+                        this.data.isAnnualView = parsed.isAnnualView || false;
+                        this.data.incomeView = parsed.incomeView || 'day'; // Cargar vista ingresos
+                    } catch(e) {
+                        console.error("Error cargando datos", e);
+                    }
+                }
+            },
+
+            resetData: function() {
+                if(confirm("ATENCIÓN: ¿Borrar TODOS los datos de la app? Esto no se puede deshacer.")) {
+                    localStorage.removeItem('airesgm_data');
+                    location.reload();
                 }
             },
 
@@ -475,6 +570,7 @@
                 document.getElementById(id).classList.add('active');
                 document.querySelectorAll('.nav-btn-header').forEach(b => b.classList.remove('active'));
                 if(btnElement) btnElement.classList.add('active');
+                
                 if(id === 'ingresos') this.renderIncomes();
                 if(id === 'gastos') this.renderExpenses();
                 if(id === 'resultados') this.renderResults();
@@ -488,7 +584,7 @@
             closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
             openModal: function(id) { document.getElementById(id).classList.add('open'); },
 
-            /* --- AYUDAS PARA FECHAS Y FILTROS --- */
+            /* --- FECHAS --- */
             getFormattedDate: function(d) { 
                 const year = d.getFullYear();
                 const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -505,24 +601,65 @@
             getDisplayDate: function(d) { return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }); },
             getDisplayMonthYear: function(d) { return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); },
 
+            /* --- LÓGICA INGRESOS (TOGGLE Y NAVEGACIÓN) --- */
+            toggleIncomeView: function() {
+                this.data.incomeView = this.data.incomeView === 'day' ? 'month' : 'day';
+                this.saveData();
+                this.initIncomeViewUI();
+                this.renderIncomes();
+            },
+
+            initIncomeViewUI: function() {
+                const btn = document.getElementById('btn-income-toggle');
+                const dayNav = document.getElementById('income-day-nav');
+                const monthNav = document.getElementById('income-month-nav');
+                const totalLabel = document.getElementById('income-total-label');
+                const listTitle = document.getElementById('income-list-title');
+
+                if(this.data.incomeView === 'day') {
+                    btn.classList.remove('active'); btn.innerText = "Ver Mensual";
+                    dayNav.style.display = 'flex'; monthNav.style.display = 'none';
+                    totalLabel.innerText = "Total Ingresos (Este día)";
+                    listTitle.innerText = "Detalle de Citas Cobradas";
+                    this.renderIncomeDate();
+                } else {
+                    btn.classList.add('active'); btn.innerText = "Ver Diario";
+                    dayNav.style.display = 'none'; monthNav.style.display = 'flex';
+                    totalLabel.innerText = "Total Ingresos (Mes)";
+                    listTitle.innerText = "Facturación por Día";
+                    this.updateFinanceDisplays();
+                }
+            },
+
+            changeIncomeDay: function(delta) {
+                this.data.incomeDate.setDate(this.data.incomeDate.getDate() + delta);
+                this.renderIncomeDate();
+                this.renderIncomes();
+            },
+            renderIncomeDate: function() { 
+                const d = this.getDisplayDate(this.data.incomeDate); 
+                document.getElementById('income-date-display').innerText = d.charAt(0).toUpperCase() + d.slice(1); 
+            },
+
+            /* --- NAVEGACIÓN FINANZAS (MES) --- */
             changeFinanceMonth: function(delta) {
                 this.data.financeDate.setMonth(this.data.financeDate.getMonth() + delta);
                 this.updateFinanceDisplays();
                 const activeSection = document.querySelector('.section.active').id;
-                if(activeSection === 'ingresos') this.renderIncomes();
                 if(activeSection === 'gastos') this.renderExpenses();
                 if(activeSection === 'resultados') this.renderResults();
+                if(activeSection === 'ingresos') this.renderIncomes(); // Actualizar si estamos en mensual
             },
 
             updateFinanceDisplays: function() {
                 const txt = this.getDisplayMonthYear(this.data.financeDate).charAt(0).toUpperCase() + this.getDisplayMonthYear(this.data.financeDate).slice(1);
-                const incomeDisplay = document.getElementById('income-date-display');
                 const expenseDisplay = document.getElementById('expense-date-display');
                 const resultsDisplay = document.getElementById('results-date-display');
+                const incomeMonthDisplay = document.getElementById('income-month-display');
                 
-                if(incomeDisplay) incomeDisplay.innerText = txt;
                 if(expenseDisplay) expenseDisplay.innerText = txt;
                 if(resultsDisplay) resultsDisplay.innerText = txt;
+                if(incomeMonthDisplay) incomeMonthDisplay.innerText = txt;
                 document.getElementById('results-year-display').innerText = this.data.financeDate.getFullYear();
             },
 
@@ -538,7 +675,7 @@
             savePurchase: function() {
                 const date = document.getElementById('purchase-date').value;
                 const place = document.getElementById('purchase-place').value;
-                const cost = parseFloat(document.getElementById('purchase-cost').value) ||0;
+                const cost = parseFloat(document.getElementById('purchase-cost').value) || 0;
                 const items = document.getElementById('purchase-items').value;
                 if(!place || !items) return this.showToast("Rellena lugar y productos");
                 this.data.purchases.push({ id: Date.now(), date: date, place: place, cost: cost, items: items });
@@ -550,7 +687,7 @@
                 sorted.forEach(p => {
                     const li = document.createElement('li');
                     li.className = 'list-item';
-                    li.innerHTML = `<div><strong>${p.date}</strong> - ${p.place}<br><small>${p.items}</small></div><div style="display:flex;align-items:center;"><span>${p.cost.toFixed(2)} €</span><div class="list-actions"><button onclick="app.deletePurchase(${p.id})">Eliminar</button></div></div>`;
+                    li.innerHTML = `<div><strong>${p.date}</strong> - ${p.place}<br><small style="color:#666">${p.items}</small></div><div style="display:flex;align-items:center;"><span style="font-weight:bold">${p.cost.toFixed(2)} €</span><div class="list-actions"><button onclick="app.deletePurchase(${p.id})">&times;</button></div></div>`;
                     list.appendChild(li);
                 });
             },
@@ -563,7 +700,7 @@
 
             /* --- LÓGICA DE CIERRE DE DÍA --- */
             closeDay: function() {
-                if(confirm("¿Estás seguro de cerrar el día? No se podrán añadir, modificar ni cancelar citas ni gastos de esta fecha.")) {
+                if(confirm("¿Estás seguro de cerrar el día? No se podrán añadir ni modificar citas de esta fecha.")) {
                     const dateStr = this.getFormattedDate(this.data.currentDate);
                     if (!this.data.closedDays.includes(dateStr)) {
                         this.data.closedDays.push(dateStr);
@@ -609,7 +746,9 @@
                         
                         const timeCell = document.createElement('div');
                         timeCell.className = 'time-label';
-                        timeCell.innerText = timeStr;
+                        if(m === 0) {
+                            timeCell.innerText = timeStr;
+                        }
                         grid.appendChild(timeCell);
                         
                         for (let col = 1; col <= 3; col++) {
@@ -618,6 +757,7 @@
                             if(isClosed) slot.classList.add('day-closed');
                             
                             const startApp = daysApps.find(a => a.time === timeStr && a.col == col);
+                            
                             const activeApp = daysApps.find(a => {
                                 if (a.col !== col) return false;
                                 const startM = this.timeToMins(a.time);
@@ -627,9 +767,8 @@
 
                             if (startApp) {
                                 slot.classList.add('occupied');
-                                if(startApp.status === 'closed') slot.classList.add('status-closed');
-                                const pxPerMin = 40 / 15;
                                 const statusClass = startApp.status === 'closed' ? 'status-closed' : 'status-pending';
+                                const pxPerMin = 40 / 15;
                                 const block = document.createElement('div');
                                 block.className = `appointment-block ${statusClass}`;
                                 block.style.height = (startApp.duration * pxPerMin) + 'px';
@@ -637,7 +776,6 @@
                                 block.onclick = (e) => { e.stopPropagation(); this.openManageAppointment(startApp.id); };
                                 slot.appendChild(block);
                             } else if (activeApp) {
-                                appIdToHandle = activeApp.id;
                                 slot.classList.add('occupied');
                                 if(activeApp.status === 'closed') slot.classList.add('status-closed');
                                 slot.onclick = (e) => {
@@ -646,11 +784,12 @@
                                     this.openManageAppointment(activeApp.id);
                                 };
                             } else {
-                                slot.onclick = (e) => {
-                                    e.stopPropagation();
-                                    if(this.isDayClosed(currentStr)) { this.showToast("El día está cerrado."); return; }
-                                    this.openCreateModal(timeStr, col);
-                                };
+                                if(!isClosed) {
+                                    slot.onclick = (e) => {
+                                        e.stopPropagation();
+                                        this.openCreateModal(timeStr, col);
+                                    };
+                                }
                             }
                             grid.appendChild(slot);
                         }
@@ -678,7 +817,8 @@
                 const srv = document.getElementById('create-service').value;
                 const prc = parseFloat(document.getElementById('create-price').value) || 0;
                 const obs = document.getElementById('create-obs').value;
-                if(!cli) return this.showToast("Falta nombre");
+                if(!cli) return this.showToast("Falta el nombre del cliente");
+                
                 this.data.appointments.push({
                     id: Date.now(), dateStr: this.getFormattedDate(this.data.currentDate),
                     time: time, col: col, duration: dur, 
@@ -724,7 +864,7 @@
                 const appData = this.data.appointments.find(a => a.id === id);
                 if(appData) {
                     appData.status = 'closed';
-                    this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Reserva cerrada");
+                    this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Reserva cerrada y cobrada");
                 }
             },
 
@@ -791,11 +931,11 @@
                 const sorted = [...history].sort((a,b) => new Date(b.date) - new Date(a.date));
                 sorted.forEach(h => {
                     const div = document.createElement('div');
-                    div.style.cssText = "background:var(--white); padding:10px; border-radius:6px; margin-bottom:8px; border-left:4px solid var(--primary-magenta);";
+                    div.style.cssText = "background:var(--white); padding:10px; border-radius:6px; margin-bottom:8px; border-left:4px solid var(--primary-magenta); box-shadow:0 1px 3px rgba(0,0,0,0.1);";
                     div.innerHTML = `<div style="font-size:0.8rem;color:#888;font-weight:bold;">${h.date}</div><div>${h.obs}</div>`;
                     list.appendChild(div);
                 });
-                if(sorted.length === 0) list.innerHTML = '<p style="color:#888; font-size:0.9rem;">Sin historial.</p>';
+                if(sorted.length === 0) list.innerHTML = '<p style="color:#888; font-size:0.9rem; text-align:center; padding:10px;">Sin historial.</p>';
             },
             openAddServiceWindow: function() {
                 const today = new Date().toISOString().split('T')[0];
@@ -820,17 +960,21 @@
                 const amt = parseFloat(document.getElementById('expense-amount').value);
                 const con = document.getElementById('expense-concept').value;
                 const dateStr = document.getElementById('expense-date').value;
-                if(!amt || !con) return this.showToast("Rellena campos");
+                if(!amt || !con) return this.showToast("Rellena importe y concepto");
                 if(this.isDayClosed(dateStr)) return this.showToast("No se pueden añadir gastos a un día cerrado.");
+                
                 this.data.expenses.push({ id: Date.now(), amount: amt, concept: con, date: dateStr });
-                document.getElementById('expense-amount').value = ''; document.getElementById('expense-concept').value = '';
+                document.getElementById('expense-amount').value = ''; 
+                document.getElementById('expense-concept').value = '';
                 this.saveData(); this.renderExpenses(); this.showToast("Gasto añadido");
             },
             renderExpenses: function() {
                 const list = document.getElementById('expense-list'); list.innerHTML = '';
                 let tot = 0;
                 const targetMonth = this.getFormattedMonth(this.data.financeDate);
-                [...this.data.expenses].sort((a,b)=>b.id-a.id).forEach(e => {
+                const sorted = [...this.data.expenses].sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                sorted.forEach(e => {
                     if(e.date.startsWith(targetMonth)) {
                         tot += e.amount;
                         const li = document.createElement('li');
@@ -841,23 +985,93 @@
                 });
                 document.getElementById('total-expenses').innerText = tot.toFixed(2) + ' €';
             },
-            deleteExpense: function(id) { this.data.expenses = this.data.expenses.filter(e => e.id !== id); this.saveData(); this.renderExpenses(); },
+            deleteExpense: function(id) { 
+                if(confirm("¿Borrar gasto?")) {
+                    this.data.expenses = this.data.expenses.filter(e => e.id !== id); 
+                    this.saveData(); 
+                    this.renderExpenses(); 
+                }
+            },
 
-            /* --- INGRESOS --- */
+            /* --- INGRESOS (UNIFICADO DIARIO/MENSUAL) --- */
             renderIncomes: function() {
-                const list = document.getElementById('income-list'); list.innerHTML = '';
-                let tot = 0;
-                const targetMonth = this.getFormattedMonth(this.data.financeDate);
-                [...this.data.appointments].sort((a,b)=>b.id-a.id).forEach(a => {
-                    if(a.price > 0 && a.status === 'closed' && a.dateStr.startsWith(targetMonth)) {
-                        tot += a.price;
-                        const li = document.createElement('li');
-                        li.className = 'list-item';
-                        li.innerHTML = `<div><strong>${a.client}</strong> - ${a.service}<br><small>${a.dateStr}</small></div><div>${a.price.toFixed(2)} €</div>`;
-                        list.appendChild(li);
+                const list = document.getElementById('income-list'); 
+                list.innerHTML = '';
+                
+                if(this.data.incomeView === 'day') {
+                    // VISTA DIARIA
+                    let dayTotal = 0;
+                    const targetDateStr = this.getFormattedDate(this.data.incomeDate);
+                    
+                    const daysClosedApps = this.data.appointments.filter(a => {
+                        return a.status === 'closed' && a.dateStr === targetDateStr;
+                    });
+
+                    dayTotal = daysClosedApps.reduce((sum, a) => sum + (a.price || 0), 0);
+                    
+                    const sortedApps = daysClosedApps.sort((a,b) => {
+                        return this.timeToMins(a.time) - this.timeToMins(b.time);
+                    });
+
+                    if(sortedApps.length === 0) {
+                        list.innerHTML = '<li style="text-align:center; padding:15px; color:#999;">No hay citas cobradas en esta fecha.</li>';
+                    } else {
+                        sortedApps.forEach(a => {
+                            const li = document.createElement('li');
+                            li.className = 'list-item';
+                            li.innerHTML = `
+                                <div>
+                                    <strong>${a.time} - ${a.client}</strong>
+                                    <div style="font-size:0.85rem; color:#666;">${a.service}</div>
+                                </div>
+                                <div><strong style="color:var(--success); font-size:1.1em;">${a.price.toFixed(2)} €</strong></div>
+                            `;
+                            list.appendChild(li);
+                        });
                     }
-                });
-                document.getElementById('total-income').innerText = tot.toFixed(2) + ' €';
+                    document.getElementById('total-income').innerText = dayTotal.toFixed(2) + ' €';
+
+                } else {
+                    // VISTA MENSUAL
+                    let monthTotal = 0;
+                    const targetMonth = this.getFormattedMonth(this.data.financeDate);
+                    
+                    // Agrupar por día
+                    const dailyTotals = {};
+                    
+                    this.data.appointments.forEach(a => {
+                        if(a.price > 0 && a.status === 'closed' && a.dateStr.startsWith(targetMonth)) {
+                            monthTotal += a.price;
+                            if(!dailyTotals[a.dateStr]) {
+                                dailyTotals[a.dateStr] = 0;
+                            }
+                            dailyTotals[a.dateStr] += a.price;
+                        }
+                    });
+
+                    const sortedDays = Object.keys(dailyTotals).sort((a,b) => new Date(b) - new Date(a));
+
+                    if(sortedDays.length === 0) {
+                        list.innerHTML = '<li style="text-align:center; padding:15px; color:#999;">No hay ingresos cerrados este mes.</li>';
+                    } else {
+                        sortedDays.forEach(dateStr => {
+                            const total = dailyTotals[dateStr];
+                            const dateObj = new Date(dateStr);
+                            const dayName = dateObj.toLocaleDateString('es-ES', { weekday: 'short' });
+                            const [y, m, d] = dateStr.split('-');
+                            const displayDate = `${dayName} ${d}/${m}`;
+                            
+                            const li = document.createElement('li');
+                            li.className = 'list-item';
+                            li.innerHTML = `
+                                <div><strong>${displayDate}</strong></div>
+                                <div><strong style="color:var(--success); font-size:1.1em;">${total.toFixed(2)} €</strong></div>
+                            `;
+                            list.appendChild(li);
+                        });
+                    }
+                    document.getElementById('total-income').innerText = monthTotal.toFixed(2) + ' €';
+                }
             },
 
             /* --- RESULTADOS --- */
@@ -951,11 +1165,10 @@
 
             renderEstadisticas: function() {
                 const apps = this.data.appointments;
-                const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+                const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-                // Helper para crear barras HTML
                 const createBarRow = (label, value, max, color = 'var(--primary-magenta)') => {
-                    const pct = max > 0 ? (value / max) * 100 : 0;
+                    const pct = max >0 ? (value / max) * 100 : 0;
                     return `<div class="chart-row">
                         <div class="chart-label">${label}</div>
                         <div class="chart-bar-container">
@@ -965,8 +1178,13 @@
                     </div>`;
                 };
 
-                // 1. SERVICIOS (Volumen)
-                if (apps.length === 0) return;
+                if (apps.length === 0) {
+                    ['chart-services','chart-week-dist','chart-month-phases','chart-rev-week','chart-rev-month','chart-ticket-week']
+                        .forEach(id => document.getElementById(id).innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Sin datos suficientes</p>');
+                    return;
+                }
+
+                // 1. SERVICIOS
                 const serviceCounts = {};
                 apps.forEach(a => { 
                     const s = (a.service || "Sin definir").trim(); 
@@ -976,11 +1194,11 @@
                 const maxServ = sortedServices[0][1];
                 let htmlServices = "";
                 sortedServices.forEach(([name, count]) => {
-                    htmlServices += createBarRow(name, count, maxServ);
+                    htmlServices += createBarRow(name.substring(0,15), count, maxServ);
                 });
                 document.getElementById('chart-services').innerHTML = htmlServices;
 
-                // 2. DÍA SEMANA (Distribución de Citas)
+                // 2. DÍA SEMANA
                 const weekCounts = [0,0,0,0,0,0,0];
                 apps.forEach(a => {
                     const d = new Date(a.dateStr);
@@ -994,7 +1212,7 @@
                 });
                 document.getElementById('chart-week-dist').innerHTML = htmlWeekDist;
 
-                // 3. COMPARATIVA (Ingresos Mensuales)
+                // 3. COMPARATIVA
                 const monthlyIncome = {};
                 apps.filter(a => a.status === 'closed').forEach(a => {
                     const monthKey = a.dateStr.substring(0, 7);
@@ -1004,11 +1222,12 @@
                 const maxMonthIncome = Math.max(...Object.values(monthlyIncome)) || 1;
                 let htmlComp = "";
                 sortedMonths.forEach(([month, income]) => {
-                    htmlComp += createBarRow(month, income.toFixed(0) + '€', maxMonthIncome);
+                    const [y, m] = month.split('-');
+                    htmlComp += createBarRow(`${m}/${y.substr(2)}`, Math.floor(income) + '€', maxMonthIncome);
                 });
                 document.getElementById('chart-month-phases').innerHTML = htmlComp || "<p>No hay datos de ingresos cerrados.</p>";
 
-                // 4. FACT/DÍA (Ingresos por Día de la Semana)
+                // 4. FACT/DÍA
                 const weekIncome = [0,0,0,0,0,0,0];
                 apps.filter(a => a.status === 'closed').forEach(a => {
                     const dayIndex = new Date(a.dateStr).getDay();
@@ -1017,11 +1236,11 @@
                 const maxWeekIncome = Math.max(...weekIncome) || 1;
                 let htmlRevWeek = "";
                 weekIncome.forEach((inc, idx) => {
-                    htmlRevWeek += createBarRow(dayNames[idx], inc.toFixed(0) + '€', maxWeekIncome, 'var(--success)');
+                    htmlRevWeek += createBarRow(dayNames[idx], Math.floor(inc) + '€', maxWeekIncome, 'var(--success)');
                 });
                 document.getElementById('chart-rev-week').innerHTML = htmlRevWeek;
 
-                // 5. FACT/MES (Ingresos por Día del Mes 1-31)
+                // 5. FACT/MES
                 const dayOfMonthIncome = {};
                 apps.filter(a => a.status === 'closed').forEach(a => {
                     const dayNum = a.dateStr.split('-')[2];
@@ -1030,14 +1249,13 @@
                 const maxDOMIncome = Math.max(...Object.values(dayOfMonthIncome)) || 1;
                 let htmlRevMonth = "";
                 Object.keys(dayOfMonthIncome).sort((a,b) => a - b).forEach(day => {
-                    htmlRevMonth += createBarRow(`Dia ${day}`, dayOfMonthIncome[day].toFixed(0) + '€', maxDOMIncome, 'var(--success)');
+                    htmlRevMonth += createBarRow(`Dia ${day}`, Math.floor(dayOfMonthIncome[day]) + '€', maxDOMIncome, 'var(--success)');
                 });
                 document.getElementById('chart-rev-month').innerHTML = htmlRevMonth || "<p>No hay datos por día.</p>";
 
-                // 6. TICKET MEDIO (Week OR Month)
+                // 6. TICKET MEDIO
                 let htmlTicket = "";
                 if (this.data.ticketView === 'week') {
-                    // Por día de la semana
                     const weekStats = dayNames.map(() => ({ total: 0, count: 0 }));
                     apps.filter(a => a.status === 'closed').forEach(a => {
                         const idx = new Date(a.dateStr).getDay();
@@ -1046,11 +1264,10 @@
                     });
                     const maxTicket = Math.max(...weekStats.map(s => s.count > 0 ? s.total / s.count : 0)) || 1;
                     weekStats.forEach((stat, idx) => {
-                        const avg = stat.count > 0 ? (stat.total / stat.count).toFixed(0) : 0;
+                        const avg = stat.count > 0 ? Math.floor(stat.total / stat.count) : 0;
                         htmlTicket += createBarRow(dayNames[idx], avg + '€', maxTicket, 'var(--text-blue)');
                     });
                 } else {
-                    // Por Mes
                     const monthlyStats = {};
                     apps.filter(a => a.status === 'closed').forEach(a => {
                         const m = a.dateStr.substring(0, 7);
@@ -1062,8 +1279,9 @@
                     const maxTicketMonth = Math.max(...Object.values(monthlyStats).map(s => s.count > 0 ? s.total / s.count : 0)) || 1;
                     
                     sortedMonthStats.forEach(([month, stats]) => {
-                        const avg = stats.count > 0 ? (stats.total / stats.count).toFixed(0) : 0;
-                        htmlTicket += createBarRow(month, avg + '€', maxTicketMonth, 'var(--text-blue)');
+                        const [y, m] = month.split('-');
+                        const avg = stats.count > 0 ? Math.floor(stats.total / stats.count) : 0;
+                        htmlTicket += createBarRow(`${m}/${y.substr(2)}`, avg + '€', maxTicketMonth, 'var(--text-blue)');
                     });
                 }
                 document.getElementById('chart-ticket-week').innerHTML = htmlTicket;
