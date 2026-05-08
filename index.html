@@ -254,7 +254,7 @@
             </div>
 
             <div style="margin-top: 20px;">
-                <button id="btn-close-day" class="btn btn-success" onclick="app.toggleDayStatus()">Cerrar Día</button>
+                <button id="btn-close-day" class="btn btn-success" onclick="app.closeDay()">Cerrar Día</button>
             </div>
         </section>
 
@@ -296,7 +296,7 @@
             </div>
 
             <div class="quick-form">
-                <input type="number" id="expense-amount" placeholder="€" inputmode="decimal" onfocus="this.select()">
+                <input type="number" id="expense-amount" placeholder="€" inputmode="decimal">
                 <input type="text" id="expense-concept" placeholder="Concepto">
                 <input type="date" id="expense-date" title="Fecha del gasto">
                 <button class="btn-add" onclick="app.addExpense()">Añadir</button>
@@ -423,7 +423,7 @@
             <div class="form-group"><label>Duración (min)</label><select id="create-duration"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 hora</option><option value="90">1h 30min</option><option value="120">2 horas</option></select></div>
             <div class="form-group"><label>Nombre</label><input type="text" id="create-client" placeholder="Nombre cliente" autocomplete="off"></div>
             <div class="form-group"><label>Servicio</label><input type="text" id="create-service" placeholder="Ej: Tinte, Corte..." autocomplete="off"></div>
-            <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00" inputmode="decimal" onfocus="this.select()"></div>
+            <div class="form-group"><label>Precio (€)</label><input type="number" id="create-price" placeholder="0.00" inputmode="decimal" step="0.01"></div>
             <div class="form-group"><label>Observaciones</label><textarea id="create-obs" rows="2"></textarea></div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="app.closeModal('create-modal')">Cancelar</button>
@@ -440,14 +440,14 @@
             <div class="form-group"><label>Hora Inicio</label><input type="text" id="manage-time" readonly></div>
             <div class="form-group"><label>Nombre Cliente</label><input type="text" id="manage-client"></div>
             <div class="form-group"><label>Servicio</label><input type="text" id="manage-service"></div>
-            <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price" inputmode="decimal" onfocus="this.select()"></div>
+            <div class="form-group"><label>Precio (€)</label><input type="number" id="manage-price" inputmode="decimal" step="0.01"></div>
             <div class="form-group"><label>Observaciones</label><textarea id="manage-obs" rows="2"></textarea></div>
             
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="app.closeModal('manage-modal')">Salir</button>
-                <button id="btn-modify-app" class="btn btn-primary" onclick="app.modifyAppointment()">Guardar Cambios</button>
-                <button id="btn-delete-app" class="btn btn-danger" onclick="app.deleteCurrentAppointment()">Cancelar Reserva</button>
-                <button id="btn-close-app" class="btn btn-success" onclick="app.closeCurrentAppointment()">Cobrar / Cerrar</button>
+                <button class="btn btn-primary" onclick="app.modifyAppointment()">Guardar Cambios</button>
+                <button class="btn btn-danger" onclick="app.deleteCurrentAppointment()">Cancelar Reserva</button>
+                <button class="btn btn-success" onclick="app.closeCurrentAppointment()">Cobrar / Cerrar</button>
             </div>
         </div>
     </div>
@@ -466,7 +466,7 @@
             </div>
             <div class="form-group">
                 <label>Coste Total (€)</label>
-                <input type="number" id="purchase-cost" placeholder="0.00" inputmode="decimal" onfocus="this.select()">
+                <input type="number" id="purchase-cost" placeholder="0.00" inputmode="decimal">
             </div>
             <div class="form-group">
                 <label>Productos Comprados</label>
@@ -538,7 +538,13 @@
                 document.getElementById('expense-date').value = this.getFormattedDate(new Date());
                 this.updateFinanceDisplays();
                 this.initIncomeViewUI();
-                this.initResultsViewUI();
+            },
+
+            /* --- Utilidad: lee el precio de un input de forma segura --- */
+            parsePrice: function(inputValue) {
+                if (inputValue === '' || inputValue === undefined || inputValue === null) return 0;
+                var parsed = parseFloat(inputValue);
+                return isNaN(parsed) ? 0 : parsed;
             },
 
             saveData: function() { 
@@ -568,6 +574,11 @@
                         console.error("Error cargando datos", e);
                     }
                 }
+            },
+
+            /* --- OPCIONES (MEJORADA EXPORTACIÓN PARA WINDOWS) --- */
+            showOptions: function() {
+                this.openModal('opciones-modal');
             },
 
             exportData: function() {
@@ -612,8 +623,9 @@
                         if(!json.appointments || !Array.isArray(json.appointments)) throw new Error("Formato inválido");
                         
                         localStorage.setItem('airesgm_data', JSON.stringify(json));
-                        app.showToast("Datos importados. Recargando...");
-                        setTimeout(() => location.reload(), 1000);
+                        if(confirm("Datos cargados correctamente. La app se recargará para aplicar los cambios.")) {
+                            location.reload();
+                        }
                     } catch (err) {
                         alert("Error al leer el archivo: " + err.message);
                     }
@@ -643,16 +655,11 @@
                 if(id === 'citas') { this.renderDate(); this.renderGrid(); }
                 if(id === 'estadisticas') this.renderEstadisticas();
                 if(id === 'clientes') this.renderClients();
+                if(id === 'opciones') { /* No hace nada, ya estamos ahí */ }
             },
             
-            closeModal: function(id) { 
-                document.getElementById(id).classList.remove('open'); 
-                document.body.style.overflow = ''; 
-            },
-            openModal: function(id) { 
-                document.getElementById(id).classList.add('open'); 
-                document.body.style.overflow = 'hidden'; 
-            },
+            closeModal: function(id) { document.getElementById(id).classList.remove('open'); },
+            openModal: function(id) { document.getElementById(id).classList.add('open'); },
 
             /* --- FECHAS --- */
             getFormattedDate: function(d) { 
@@ -711,31 +718,6 @@
                 document.getElementById('income-date-display').innerText = d.charAt(0).toUpperCase() + d.slice(1); 
             },
 
-            /* --- RESULTADOS (TOGGLE Y NAVEGACIÓN) --- */
-            toggleAnnualView: function() {
-                this.data.isAnnualView = !this.data.isAnnualView;
-                this.saveData();
-                this.initResultsViewUI();
-                this.renderResults();
-            },
-
-            initResultsViewUI: function() {
-                const btn = document.getElementById('btn-toggle-year');
-                const monthNav = document.getElementById('results-date-nav');
-                const yearNav = document.getElementById('results-year-nav');
-                const label = document.getElementById('result-label');
-
-                if(this.data.isAnnualView) {
-                    btn.classList.add('active'); btn.innerText = "Ver Mensual";
-                    monthNav.style.display = 'none'; yearNav.style.display = 'flex';
-                    label.innerText = "Balance Anual Acumulado";
-                } else {
-                    btn.classList.remove('active'); btn.innerText = "Ver Anual";
-                    monthNav.style.display = 'flex'; yearNav.style.display = 'none';
-                    label.innerText = "Balance del Mes";
-                }
-            },
-
             /* --- NAVEGACIÓN FINANZAS (MES) --- */
             changeFinanceMonth: function(delta) {
                 this.data.financeDate.setMonth(this.data.financeDate.getMonth() + delta);
@@ -743,7 +725,7 @@
                 const activeSection = document.querySelector('.section.active').id;
                 if(activeSection === 'gastos') this.renderExpenses();
                 if(activeSection === 'resultados') this.renderResults();
-                if(activeSection === 'ingresos' && this.data.incomeView === 'month') this.renderIncomes();
+                if(activeSection === 'ingresos') this.renderIncomes();
             },
 
             updateFinanceDisplays: function() {
@@ -794,17 +776,10 @@
             },
 
             /* --- LÓGICA DE CIERRE DE DÍA --- */
-            toggleDayStatus: function() {
-                const dateStr = this.getFormattedDate(this.data.currentDate);
-                if (this.isDayClosed(dateStr)) {
-                    if(confirm("¿Seguro que quieres reabrir este día? Se podrán modificar las citas.")) {
-                        this.data.closedDays = this.data.closedDays.filter(d => d !== dateStr);
-                        this.saveData();
-                        this.renderGrid();
-                        this.showToast("Día reabierto");
-                    }
-                } else {
-                    if(confirm("¿Estás seguro de cerrar el día? No se podrán añadir ni modificar citas de esta fecha.")) {
+            closeDay: function() {
+                if(confirm("¿Estás seguro de cerrar el día? No se podrán añadir ni modificar citas de esta fecha.")) {
+                    const dateStr = this.getFormattedDate(this.data.currentDate);
+                    if (!this.data.closedDays.includes(dateStr)) {
                         this.data.closedDays.push(dateStr);
                         this.saveData();
                         this.renderGrid();
@@ -832,11 +807,13 @@
                 const closeBtn = document.getElementById('btn-close-day');
                 
                 if(isClosed) {
-                    closeBtn.innerText = "Abrir Día";
-                    closeBtn.classList.remove('btn-success'); closeBtn.classList.add('btn-danger');
+                    closeBtn.innerText = "Día Cerrado";
+                    closeBtn.disabled = true;
+                    closeBtn.classList.remove('btn-success'); closeBtn.classList.add('btn-secondary');
                 } else {
                     closeBtn.innerText = "Cerrar Día";
-                    closeBtn.classList.add('btn-success'); closeBtn.classList.remove('btn-danger');
+                    closeBtn.disabled = false;
+                    closeBtn.classList.add('btn-success'); closeBtn.classList.remove('btn-secondary');
                 }
 
                 for (let h = 9; h <= 19; h++) {
@@ -846,7 +823,8 @@
                         
                         const timeCell = document.createElement('div');
                         timeCell.className = 'time-label';
-                        timeCell.innerText = timeStr; 
+                        timeCell.innerText = timeStr;
+                        
                         grid.appendChild(timeCell);
                         
                         for (let col = 1; col <= 3; col++) {
@@ -855,6 +833,7 @@
                             if(isClosed) slot.classList.add('day-closed');
                             
                             const startApp = daysApps.find(a => a.time === timeStr && a.col == col);
+                            
                             const activeApp = daysApps.find(a => {
                                 if (a.col !== col) return false;
                                 const startM = this.timeToMins(a.time);
@@ -877,6 +856,7 @@
                                 if(activeApp.status === 'closed') slot.classList.add('status-closed');
                                 slot.onclick = (e) => {
                                     e.stopPropagation();
+                                    if(this.isDayClosed(currentStr)) { this.showToast("El día está cerrado."); return; }
                                     this.openManageAppointment(activeApp.id);
                                 };
                             } else {
@@ -911,7 +891,7 @@
                 const dur = parseInt(document.getElementById('create-duration').value);
                 const cli = document.getElementById('create-client').value;
                 const srv = document.getElementById('create-service').value;
-                const prc = parseFloat(document.getElementById('create-price').value) || 0;
+                const prc = this.parsePrice(document.getElementById('create-price').value);
                 const obs = document.getElementById('create-obs').value;
                 if(!cli) return this.showToast("Falta el nombre del cliente");
                 
@@ -930,31 +910,26 @@
                 document.getElementById('manage-time').value = appData.time;
                 document.getElementById('manage-client').value = appData.client;
                 document.getElementById('manage-service').value = appData.service;
-                
-                // SOLUCIÓN DEFINITIVA BUG DEL CURSOR: 
-                // Comprobamos si el valor es 0 numérico, "0" en texto, nulo o vacío.
-                // Si es así, ponemos el campo vacío. Si no, mostramos el precio real.
-                const priceVal = appData.price;
-                document.getElementById('manage-price').value = (priceVal == 0 || priceVal == null || priceVal == "") ? '' : priceVal;
-                
+                document.getElementById('manage-price').value = (appData.price !== null && appData.price !== undefined) ? appData.price : '';
                 document.getElementById('manage-obs').value = appData.obs;
-
-                const isClosed = this.isDayClosed(appData.dateStr);
-                document.getElementById('btn-modify-app').disabled = isClosed;
-                document.getElementById('btn-delete-app').disabled = isClosed;
-                document.getElementById('btn-close-app').disabled = isClosed;
-
                 this.openModal('manage-modal');
+            },
+
+            /* --- Lee los valores del formulario de gestión y los aplica al objeto cita --- */
+            applyManageFormChanges: function(appData) {
+                if(!appData) return;
+                appData.client = document.getElementById('manage-client').value;
+                appData.service = document.getElementById('manage-service').value;
+                const priceVal = document.getElementById('manage-price').value;
+                appData.price = (priceVal !== '') ? parseFloat(priceVal) : 0;
+                appData.obs = document.getElementById('manage-obs').value;
             },
 
             modifyAppointment: function() {
                 const id = parseInt(document.getElementById('manage-id').value);
                 const appData = this.data.appointments.find(a => a.id === id);
                 if(appData) {
-                    appData.client = document.getElementById('manage-client').value;
-                    appData.service = document.getElementById('manage-service').value;
-                    appData.price = parseFloat(document.getElementById('manage-price').value) || 0;
-                    appData.obs = document.getElementById('manage-obs').value;
+                    this.applyManageFormChanges(appData);
                     this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Cita modificada");
                 }
             },
@@ -967,10 +942,14 @@
                 }
             },
 
+            /* --- FIX: Ahora guarda los cambios del formulario ANTES de cerrar la cita --- */
             closeCurrentAppointment: function() {
                 const id = parseInt(document.getElementById('manage-id').value);
                 const appData = this.data.appointments.find(a => a.id === id);
                 if(appData) {
+                    // Primero aplicar cualquier cambio que el usuario haya hecho en el formulario
+                    this.applyManageFormChanges(appData);
+                    // Luego cerrar la cita
                     appData.status = 'closed';
                     this.saveData(); this.closeModal('manage-modal'); this.renderGrid(); this.showToast("Reserva cerrada y cobrada");
                 }
@@ -1087,7 +1066,7 @@
                         tot += e.amount;
                         const li = document.createElement('li');
                         li.className = 'list-item';
-                        li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div>`;
+                        li.innerHTML = `<div><strong>${e.concept}</strong><br><small>${e.date}</small></div><div style="display:flex;align-items:center;"><span style="color:var(--danger);margin-right:10px;">-${e.amount.toFixed(2)} €</span><button onclick="app.deleteExpense(${e.id})">&times;</button></div></li>`;
                         list.appendChild(li);
                     }
                 });
@@ -1140,14 +1119,16 @@
                 } else {
                     let monthTotal = 0;
                     const targetMonth = this.getFormattedMonth(this.data.financeDate);
+                    
                     const dailyTotals = {};
                     
                     this.data.appointments.forEach(a => {
-                        if(a.status === 'closed' && a.dateStr.startsWith(targetMonth)) {
-                            const price = a.price || 0;
-                            monthTotal += price;
-                            if(!dailyTotals[a.dateStr]) dailyTotals[a.dateStr] = 0;
-                            dailyTotals[a.dateStr] += price;
+                        if(a.price > 0 && a.status === 'closed' && a.dateStr.startsWith(targetMonth)) {
+                            monthTotal += a.price;
+                            if(!dailyTotals[a.dateStr]) {
+                                dailyTotals[a.dateStr] = 0;
+                            }
+                            dailyTotals[a.dateStr] += a.price;
                         }
                     });
 
@@ -1177,6 +1158,25 @@
             },
 
             /* --- RESULTADOS --- */
+            toggleAnnualView: function() {
+                this.data.isAnnualView = !this.data.isAnnualView;
+                const btn = document.getElementById('btn-toggle-year');
+                const monthNav = document.getElementById('results-date-nav');
+                const yearNav = document.getElementById('results-year-nav');
+                const label = document.getElementById('result-label');
+
+                if(this.data.isAnnualView) {
+                    btn.classList.add('active'); btn.innerText = "Ver Mensual";
+                    monthNav.style.display = 'none'; yearNav.style.display = 'flex';
+                    label.innerText = "Balance Anual Acumulado";
+                } else {
+                    btn.classList.remove('active'); btn.innerText = "Ver Anual";
+                    monthNav.style.display = 'flex'; yearNav.style.display = 'none';
+                    label.innerText = "Balance del Mes";
+                }
+                this.renderResults();
+            },
+
             renderResults: function() {
                 let inc = 0; let exp = 0;
                 if(this.data.isAnnualView) {
@@ -1250,14 +1250,14 @@
                 const apps = this.data.appointments;
                 const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-                const createBarRow = (label, numericValue, displayValue, max, color = 'var(--primary-magenta)') => {
-                    const pct = max > 0 ? (numericValue / max) * 100 : 0;
+                const createBarRow = (label, value, max, color = 'var(--primary-magenta)') => {
+                    const pct = max >0 ? (value / max) * 100 : 0;
                     return `<div class="chart-row">
                         <div class="chart-label">${label}</div>
                         <div class="chart-bar-container">
                             <div class="chart-bar" style="width: ${pct}%; background-color: ${color};"></div>
                         </div>
-                        <div class="chart-value">${displayValue}</div>
+                        <div class="chart-value">${value}</div>
                     </div>`;
                 };
 
@@ -1277,7 +1277,7 @@
                 const maxServ = sortedServices[0][1];
                 let htmlServices = "";
                 sortedServices.forEach(([name, count]) => {
-                    htmlServices += createBarRow(name.substring(0,15), count, count, maxServ);
+                    htmlServices += createBarRow(name.substring(0,15), count, maxServ);
                 });
                 document.getElementById('chart-services').innerHTML = htmlServices;
 
@@ -1291,7 +1291,7 @@
                 const maxWeekCount = Math.max(...weekCounts) || 1;
                 let htmlWeekDist = "";
                 weekCounts.forEach((count, index) => {
-                    htmlWeekDist += createBarRow(dayNames[index], count, count, maxWeekCount);
+                    htmlWeekDist += createBarRow(dayNames[index], count, maxWeekCount);
                 });
                 document.getElementById('chart-week-dist').innerHTML = htmlWeekDist;
 
@@ -1306,7 +1306,7 @@
                 let htmlComp = "";
                 sortedMonths.forEach(([month, income]) => {
                     const [y, m] = month.split('-');
-                    htmlComp += createBarRow(`${m}/${y.substr(2)}`, income, Math.floor(income) + '€', maxMonthIncome);
+                    htmlComp += createBarRow(`${m}/${y.substr(2)}`, Math.floor(income) + '€', maxMonthIncome);
                 });
                 document.getElementById('chart-month-phases').innerHTML = htmlComp || "<p>No hay datos de ingresos cerrados.</p>";
 
@@ -1319,7 +1319,7 @@
                 const maxWeekIncome = Math.max(...weekIncome) || 1;
                 let htmlRevWeek = "";
                 weekIncome.forEach((inc, idx) => {
-                    htmlRevWeek += createBarRow(dayNames[idx], inc, Math.floor(inc) + '€', maxWeekIncome, 'var(--success)');
+                    htmlRevWeek += createBarRow(dayNames[idx], Math.floor(inc) + '€', maxWeekIncome, 'var(--success)');
                 });
                 document.getElementById('chart-rev-week').innerHTML = htmlRevWeek;
 
@@ -1332,7 +1332,7 @@
                 const maxDOMIncome = Math.max(...Object.values(dayOfMonthIncome)) || 1;
                 let htmlRevMonth = "";
                 Object.keys(dayOfMonthIncome).sort((a,b) => a - b).forEach(day => {
-                    htmlRevMonth += createBarRow(`Dia ${day}`, dayOfMonthIncome[day], Math.floor(dayOfMonthIncome[day]) + '€', maxDOMIncome, 'var(--success)');
+                    htmlRevMonth += createBarRow(`Dia ${day}`, Math.floor(dayOfMonthIncome[day]) + '€', maxDOMIncome, 'var(--success)');
                 });
                 document.getElementById('chart-rev-month').innerHTML = htmlRevMonth || "<p>No hay datos por día.</p>";
 
@@ -1342,20 +1342,20 @@
                     const weekStats = dayNames.map(() => ({ total: 0, count: 0 }));
                     apps.filter(a => a.status === 'closed').forEach(a => {
                         const idx = new Date(a.dateStr).getDay();
-                        weekStats[idx].total += a.price;
+                        weekStats[idx].total += (a.price || 0);
                         weekStats[idx].count++;
                     });
                     const maxTicket = Math.max(...weekStats.map(s => s.count > 0 ? s.total / s.count : 0)) || 1;
                     weekStats.forEach((stat, idx) => {
-                        const avg = stat.count > 0 ? stat.total / stat.count : 0;
-                        htmlTicket += createBarRow(dayNames[idx], avg, Math.floor(avg) + '€', maxTicket, 'var(--text-blue)');
+                        const avg = stat.count > 0 ? Math.floor(stat.total / stat.count) : 0;
+                        htmlTicket += createBarRow(dayNames[idx], avg + '€', maxTicket, 'var(--text-blue)');
                     });
                 } else {
                     const monthlyStats = {};
                     apps.filter(a => a.status === 'closed').forEach(a => {
                         const m = a.dateStr.substring(0, 7);
                         if (!monthlyStats[m]) monthlyStats[m] = { total: 0, count: 0 };
-                        monthlyStats[m].total += a.price;
+                        monthlyStats[m].total += (a.price || 0);
                         monthlyStats[m].count++;
                     });
                     const sortedMonthStats = Object.entries(monthlyStats).sort((a, b) => a[0].localeCompare(b[0]));
@@ -1363,8 +1363,8 @@
                     
                     sortedMonthStats.forEach(([month, stats]) => {
                         const [y, m] = month.split('-');
-                        const avg = stats.count > 0 ? stats.total / stats.count : 0;
-                        htmlTicket += createBarRow(`${m}/${y.substr(2)}`, avg, Math.floor(avg) + '€', maxTicketMonth, 'var(--text-blue)');
+                        const avg = stats.count > 0 ? Math.floor(stats.total / stats.count) : 0;
+                        htmlTicket += createBarRow(`${m}/${y.substr(2)}`, avg + '€', maxTicketMonth, 'var(--text-blue)');
                     });
                 }
                 document.getElementById('chart-ticket-week').innerHTML = htmlTicket;
