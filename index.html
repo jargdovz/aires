@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+<!-- nojekyll -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -182,7 +183,8 @@
             min-height: 100%;
             animation: fadeUp 0.25s ease;
         }
-        .section.active { display: block; }
+        .section { display: none !important; }
+        .section.active { display: block !important; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ══════ TYPOGRAPHY ══════ */
@@ -431,8 +433,8 @@
         }
         .results-summary-item { text-align: center; }
         .results-summary-item small {
-            font-size: 0.68rem;
-            color: var(--text-3);
+            font-size: 0.82rem;
+            color: #ffffff;
             letter-spacing: 0.1em;
             text-transform: uppercase;
             font-weight: 500;
@@ -1137,6 +1139,7 @@
         _isReceivingFromFirebase: false,
 
         init: function() {
+            if (this._initialized) return; this._initialized = true;
             // Escuchar cuando Firebase esté listo (puede llegar antes o después de DOMContentLoaded)
             window.addEventListener('firebase-ready', () => {
                 if (this._syncStarted) return; // evitar doble arranque
@@ -1820,7 +1823,18 @@
         }
     };
 
-    document.addEventListener('DOMContentLoaded', ()=>{ app.init(); });
+    // Guard: init solo puede ejecutarse UNA vez aunque el evento se dispare múltiples veces
+    let _appInitialized = false;
+    function safeInit() {
+        if (_appInitialized) return;
+        _appInitialized = true;
+        app.init();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', safeInit);
+    } else {
+        safeInit(); // DOM ya listo
+    }
     </script>
 </body>
 </html>
